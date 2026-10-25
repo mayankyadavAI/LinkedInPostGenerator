@@ -375,7 +375,7 @@ def research_topic(topic: str, niche: str) -> str:
         start_published_date="2025-01-01",
         contents={
             "text": {"max_characters": 800},
-            "highlights": {"num_sentences": 3},
+            "highlights": {"max_characters": 300},
         },
     )
 
