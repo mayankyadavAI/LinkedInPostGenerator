@@ -343,10 +343,14 @@ def generate_text(prompt: str, system_instruction: str) -> str:
                             print(f"  [Gemini] Daily quota exhausted on {key_label}. Switching to {next_key}.")
                             daily_exhausted = True
                             break
-                        wait = _parse_retry_seconds(e)
-                        kind = "quota (429)" if _is_quota_error(e) else "overloaded (503)"
-                        print(f"  [Gemini] {kind} on {model_id} ({key_label}), attempt {attempt}/{MAX_RETRIES}. Retrying in {wait}s...")
-                        if attempt < MAX_RETRIES:
+                        # 503 overloaded: only retry twice (10s, 20s) then move to next model.
+                        # 429 quota: use the retry-after hint from the error, up to MAX_RETRIES.
+                        is_503 = _is_retryable_server_error(e)
+                        max_attempts = 2 if is_503 else MAX_RETRIES
+                        wait = (10 * attempt) if is_503 else _parse_retry_seconds(e)
+                        kind = "overloaded (503)" if is_503 else "quota (429)"
+                        print(f"  [Gemini] {kind} on {model_id} ({key_label}), attempt {attempt}/{max_attempts}. Retrying in {wait}s...")
+                        if attempt < max_attempts:
                             time.sleep(wait)
                         else:
                             print(f"  [Gemini] Retries exhausted for {model_id}, trying next model.")
@@ -515,26 +519,11 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
 
     limit = PLATFORM_CHAR_LIMITS[PLATFORM]
 
-    # Tighten toward the soft punchy-length target first (max 2 attempts, plain text only) —
-    # this runs even when well under the 3000 hard cap, since the goal is short, not just legal.
-    for shorten_attempt in range(2):
-        if len(post) <= TARGET_POST_LENGTH:
-            break
-        print(f"  Post is {len(post)} chars — tightening toward ~{TARGET_POST_LENGTH} (attempt {shorten_attempt + 1}/2)...")
-        shorten_prompt = (
-            f"This LinkedIn post is {len(post)} characters. Tighten it to roughly {TARGET_POST_LENGTH} "
-            f"characters (a bit under is fine) while keeping the hook, the strongest 2-3 points, and the "
-            f"closing line. Cut everything else — repeated ideas, weaker bullets, filler sentences.\n"
-            f"Plain text only — no markdown, no JSON wrapper.\n\n"
-            f"Original post:\n{post}\n\n"
-            f"Output ONLY the shortened post text. Nothing else."
-        )
-        post = generate_text(shorten_prompt, SYSTEM_PROMPT)
-        post = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', post)
-        post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
-        post = post.strip()
+    # Soft-target tightening removed — the prompt already targets 900-1300 chars.
+    # An extra API call to shorten burns quota and risks mid-run failures.
+    # Only enforce the real hard platform cap below.
 
-    # If it's still over the real hard limit (rare after the tightening pass above), force it down
+    # If over the hard limit (rare), ask the model to shorten — max 2 attempts
     for shorten_attempt in range(2):
         if len(post) <= limit:
             break
