@@ -293,6 +293,11 @@ def _call_deepseek(prompt: str, system_instruction: str) -> str:
             json={"model": DEEPSEEK_MODEL, "messages": messages},
             timeout=90,
         )
+        if resp.status_code == 402:
+            raise RuntimeError(
+                "DeepSeek API returned 402 Payment Required — account has no credits. "
+                "Top up at https://platform.deepseek.com or add GEMINI_API_KEY_2 as a fallback."
+            )
         if resp.status_code == 429:
             wait = 20 * attempt
             print(f"  [DeepSeek] 429 rate limit, attempt {attempt}/3. Waiting {wait}s...")
