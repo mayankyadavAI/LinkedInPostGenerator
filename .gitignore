@@ -1,0 +1,7 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+renderer/output/*.png
+renderer/output/_tmp.html

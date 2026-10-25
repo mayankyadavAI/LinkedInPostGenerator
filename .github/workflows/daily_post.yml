@@ -1,0 +1,85 @@
+name: Daily LinkedIn Post
+
+on:
+  schedule:
+    - cron: '30 3 * * *'   # 9:00 AM IST  — Breaking AI news / hot take
+    - cron: '30 7 * * *'   # 1:00 PM IST  — AI educational post
+    - cron: '30 12 * * *'  # 6:00 PM IST  — Personal learning / build-in-public
+    - cron: '30 16 * * *'  # 10:00 PM IST — Advanced AI concept
+  workflow_dispatch:
+    inputs:
+      content_slot:
+        description: 'Content slot: news | educational | personal | advanced'
+        required: false
+        default: 'news'
+      topic:
+        description: 'Force an exact topic string (must match one in topics.json) — leave blank for random'
+        required: false
+        default: ''
+      preview:
+        description: 'Preview only — do not publish to LinkedIn'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: python -m playwright install chromium --with-deps
+
+      - name: Create infographic output dir
+        run: mkdir -p renderer/output
+
+      - name: Detect content slot
+        id: slot
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "slot=${{ github.event.inputs.content_slot }}" >> $GITHUB_OUTPUT
+          else
+            case "${{ github.event.schedule }}" in
+              "30 3 * * *")  echo "slot=news"        >> $GITHUB_OUTPUT ;;
+              "30 7 * * *")  echo "slot=educational" >> $GITHUB_OUTPUT ;;
+              "30 12 * * *") echo "slot=personal"    >> $GITHUB_OUTPUT ;;
+              "30 16 * * *") echo "slot=advanced"    >> $GITHUB_OUTPUT ;;
+              *)             echo "slot=news"        >> $GITHUB_OUTPUT ;;
+            esac
+          fi
+
+      - name: Generate and post to LinkedIn
+        run: python scripts/generate_and_schedule.py ${{ github.event.inputs.preview == 'true' && '--preview' || '' }}
+        env:
+          GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2:       ${{ secrets.GEMINI_API_KEY_2 }}
+          DEEPSEEK_API_KEY:       ${{ secrets.DEEPSEEK_API_KEY }}
+          EXA_API_KEY:            ${{ secrets.EXA_API_KEY }}
+          LINKEDIN_ACCESS_TOKEN:  ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_ID:     ${{ secrets.LINKEDIN_PERSON_ID }}
+          CONTENT_SLOT:           ${{ steps.slot.outputs.slot }}
+          INCLUDE_INFOGRAPHIC:    "1"
+          TOPIC_OVERRIDE:         ${{ github.event.inputs.topic }}
+
+      - name: Upload generated infographic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: infographic-${{ github.run_id }}
+          path: renderer/output/*.png
+          if-no-files-found: ignore
+          retention-days: 14

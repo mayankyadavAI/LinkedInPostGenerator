@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1080px; overflow: hidden; }
+
+  :root {
+    --bg:       #080c14;   /* deep navy-black */
+    --surface:  #0f1421;   /* card surface */
+    --surface2: #161d2e;   /* elevated element */
+    --border:   rgba(255,255,255,0.07);
+    --ink:      #eef0f5;   /* primary text */
+    --ink2:     #8b94a8;   /* secondary text */
+    --accent:   #6c8fff;   /* electric blue — primary accent */
+    --accent2:  #a78bfa;   /* violet — secondary */
+    --teal:     #2dd4bf;   /* teal — step 3 */
+    --amber:    #f59e0b;   /* amber — step 4 */
+    --line:     rgba(255,255,255,0.06);
+  }
+
+  .page {
+    width: 1080px; height: 1410px;
+    background: var(--bg);
+    position: relative; overflow: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* subtle background grid */
+  .page::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 54px 54px;
+    pointer-events: none;
+  }
+
+  /* top accent bar */
+  .accent-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 50%, var(--teal) 100%);
+  }
+
+  .content {
+    position: absolute; left: 60px; top: 0; right: 60px; bottom: 0;
+  }
+
+  /* ── header ── */
+  .header-row {
+    position: absolute; top: 36px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .eyebrow {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(108,143,255,0.08);
+    border: 1px solid rgba(108,143,255,0.3);
+    border-radius: 6px; padding: 7px 16px;
+  }
+  .eyebrow-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .eyebrow span {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px;
+    color: var(--accent); letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .corner-tag {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px;
+    color: var(--ink2); letter-spacing: 0.5px;
+  }
+
+  /* ── title ── */
+  .title-block { position: absolute; left: 0; top: 90px; width: 850px; }
+  .h-line {
+    font-family: 'DM Sans', 'Inter', sans-serif; font-weight: 800; font-size: 62px;
+    line-height: 1.06; letter-spacing: -1px;
+  }
+  .h-line.l1 { color: var(--ink); }
+  .h-line.l2 {
+    color: transparent;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .tagline {
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 20px;
+    color: var(--ink2); margin-top: 14px; letter-spacing: 0.1px;
+  }
+
+  .divider {
+    position: absolute; left: 0; width: 960px; height: 1px;
+    background: linear-gradient(90deg, var(--accent) 0%, transparent 60%);
+    opacity: 0.25;
+  }
+
+  /* ── section label ── */
+  .section-label {
+    position: absolute; left: 0;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label .sl-bar {
+    width: 3px; height: 20px; background: var(--accent); border-radius: 2px;
+  }
+  .section-label .sl-text {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12px;
+    color: var(--accent); letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* ── stage row ── */
+  .stage { position: absolute; }
+  .stage-label {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .mockwin {
+    width: 100%; height: 160px;
+    background: var(--surface); border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--c);
+  }
+  .mockwin .dots { display: flex; gap: 5px; margin-bottom: 12px; }
+  .mockwin .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .mockwin .dot.r { background: #ff5f56; }
+  .mockwin .dot.y { background: #ffbd2e; }
+  .mockwin .dot.g { background: #27c93f; }
+  .mockwin .snippet {
+    font-family: 'JetBrains Mono', monospace; font-weight: 500;
+    font-size: 17px; line-height: 1.6; color: var(--c);
+  }
+  .mockwin.chip {
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+  }
+  .mockwin.chip svg { width: 56px; height: 56px; }
+  .mockwin.chip .snippet { margin-top: 10px; font-size: 14px; text-align: center; }
+
+  /* ── step cards ── */
+  .card {
+    position: absolute;
+    background: var(--surface); border-radius: 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--c);
+    padding: 22px 22px 18px 26px;
+  }
+  .card.c1 { --c: var(--accent); }
+  .card.c2 { --c: var(--accent2); }
+  .card.c3 { --c: var(--teal); }
+  .card.c4 { --c: var(--amber); }
+
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .card-num {
+    width: 30px; height: 30px; border-radius: 6px;
+    background: color-mix(in srgb, var(--c) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 15px; color: var(--c); flex-shrink: 0;
+  }
+  .card-title {
+    font-family: 'DM Sans', 'Inter', sans-serif; font-weight: 700; font-size: 22px;
+    color: var(--ink); letter-spacing: -0.2px;
+  }
+  .card-pts { list-style: none; }
+  .card-pts li {
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 17px;
+    color: var(--ink2); line-height: 1.55;
+    padding-left: 18px; position: relative; margin-bottom: 5px;
+  }
+  .card-pts li::before {
+    content: "–"; position: absolute; left: 0;
+    color: var(--c); font-weight: 700;
+  }
+
+  /* ── flow strips ── */
+  .flow-block { position: absolute; left: 0; width: 650px; }
+  .flow-label {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 11px;
+    color: var(--accent); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+  .flow-chip {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px;
+    color: var(--ink); border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface2);
+    padding: 6px 12px; white-space: nowrap;
+  }
+  .flow-arrow { color: var(--ink2); font-size: 14px; }
+
+  /* ── insight callout (replaces sticky) ── */
+  .callout {
+    position: absolute; right: 0; width: 240px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 10px;
+    padding: 18px 16px;
+  }
+  .callout-label {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 10px;
+    color: var(--accent2); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .callout-text {
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 17px;
+    color: var(--ink); line-height: 1.5;
+  }
+
+  /* ── footer ── */
+  .footer {
+    position: absolute; left: 0; width: 960px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-handle {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px;
+    color: var(--accent); letter-spacing: 0.3px;
+  }
+  .footer-tag {
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 14px;
+    color: var(--ink2);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="accent-bar"></div>
+  <div class="content">
+
+    <div class="header-row">
+      <div class="eyebrow">
+        <div class="eyebrow-dot"></div>
+        <span>AI SYSTEMS · HOW IT WORKS</span>
+      </div>
+      <div class="corner-tag">engineering notes</div>
+    </div>
+
+    <div class="title-block">
+      <div id="h1" class="h-line l1">{{ title_line1 }}</div>
+      <div id="h2" class="h-line l2">{{ title_line2 }}</div>
+      <div class="tagline">{{ tagline }}</div>
+    </div>
+
+    <div class="divider" id="hr1"></div>
+
+    <div class="section-label" id="sectionRule">
+      <div class="sl-bar"></div>
+      <div class="sl-text">{{ section_label }}</div>
+    </div>
+
+    <!-- Top mockup row: 3 stages -->
+    <div class="stage" id="stage0" style="left:0px;width:290px">
+      <div class="stage-label" style="color:var(--accent)">{{ stages[0].label }}</div>
+      <div class="mockwin editor" style="--c:var(--accent)">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="snippet">{{ stages[0].snippet }}</div>
+      </div>
+    </div>
+
+    <div class="stage" id="stage1" style="left:335px;width:290px">
+      <div class="stage-label" style="color:var(--accent2)">{{ stages[1].label }}</div>
+      <div class="mockwin chip" style="--c:var(--accent2)">
+        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--accent2)">
+          <rect x="8" y="8" width="14" height="14" rx="2"/>
+          <line x1="12" y1="2" x2="12" y2="8"/><line x1="18" y1="2" x2="18" y2="8"/>
+          <line x1="12" y1="22" x2="12" y2="28"/><line x1="18" y1="22" x2="18" y2="28"/>
+          <line x1="2" y1="12" x2="8" y2="12"/><line x1="2" y1="18" x2="8" y2="18"/>
+          <line x1="22" y1="12" x2="28" y2="12"/><line x1="22" y1="18" x2="28" y2="18"/>
+        </svg>
+        <div class="snippet">{{ stages[1].snippet }}</div>
+      </div>
+    </div>
+
+    <div class="stage" id="stage2" style="left:670px;width:290px">
+      <div class="stage-label" style="color:var(--teal)">{{ stages[2].label }}</div>
+      <div class="mockwin terminal" style="--c:var(--teal)">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="snippet">{{ stages[2].snippet }}</div>
+      </div>
+    </div>
+
+    <svg id="stage-arrows" style="position:absolute;left:0;top:0;pointer-events:none;overflow:visible"
+         width="960" height="600">
+      <defs>
+        <marker id="sarr" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
+          <polygon points="0 0.5, 9 3.5, 0 6.5" fill="#8b94a8"/>
+        </marker>
+      </defs>
+    </svg>
+
+    <!-- 4 step cards, 2×2 -->
+    <div class="card c1" id="card0" style="left:0px;width:460px">
+      <div class="card-header"><div class="card-num">01</div><div class="card-title">{{ steps[0].label }}</div></div>
+      <ul class="card-pts">{% for p in steps[0].points %}<li>{{ p }}</li>{% endfor %}</ul>
+    </div>
+    <div class="card c2" id="card1" style="left:500px;width:460px">
+      <div class="card-header"><div class="card-num">02</div><div class="card-title">{{ steps[1].label }}</div></div>
+      <ul class="card-pts">{% for p in steps[1].points %}<li>{{ p }}</li>{% endfor %}</ul>
+    </div>
+    <div class="card c3" id="card2" style="left:0px;width:460px">
+      <div class="card-header"><div class="card-num">03</div><div class="card-title">{{ steps[2].label }}</div></div>
+      <ul class="card-pts">{% for p in steps[2].points %}<li>{{ p }}</li>{% endfor %}</ul>
+    </div>
+    <div class="card c4" id="card3" style="left:500px;width:460px">
+      <div class="card-header"><div class="card-num">04</div><div class="card-title">{{ steps[3].label }}</div></div>
+      <ul class="card-pts">{% for p in steps[3].points %}<li>{{ p }}</li>{% endfor %}</ul>
+    </div>
+
+    <!-- Flow strips + callout -->
+    <div class="flow-block" id="flowA">
+      <div class="flow-label">pipeline</div>
+      <div class="flow-row">
+        {% for item in flow_a_items %}<div class="flow-chip">{{ item }}</div>{% if not loop.last %}<span class="flow-arrow">→</span>{% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <div class="flow-block" id="flowB">
+      <div class="flow-label">summary</div>
+      <div class="flow-row">
+        {% for item in flow_b_items %}<div class="flow-chip">{{ item }}</div>{% if not loop.last %}<span class="flow-arrow">→</span>{% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <div class="callout" id="callout">
+      <div class="callout-label">key insight</div>
+      <div class="callout-text">{{ hook }}</div>
+    </div>
+
+    <div class="footer" id="footer">
+      <div class="footer-handle">{{ infographic_handle if infographic_handle else "AI Systems Notes" }}</div>
+      <div class="footer-tag">daily notes on the systems behind AI</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+window._infoDone = false;
+
+window.drawInfographic = function() {
+  if (window._infoDone) return;
+  window._infoDone = true;
+
+  var content = document.querySelector('.content');
+  var cr = content.getBoundingClientRect();
+
+  // Shrink title lines if too wide
+  ['h1','h2'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var sz = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > 820 && sz > 28) { sz -= 2; el.style.fontSize = sz + 'px'; }
+  });
+
+  // Shrink card titles if too wide
+  document.querySelectorAll('.card-title').forEach(function(el) {
+    var sz = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > 390 && sz > 15) { sz--; el.style.fontSize = sz + 'px'; }
+  });
+
+  // Shrink snippets if too wide
+  document.querySelectorAll('.mockwin .snippet').forEach(function(el) {
+    var sz = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > 255 && sz > 11) { sz--; el.style.fontSize = sz + 'px'; }
+  });
+
+  // Position divider and section label below title block
+  var titleBlock = document.querySelector('.title-block');
+  var titleBottom = titleBlock.getBoundingClientRect().bottom - cr.top;
+
+  var hr1 = document.getElementById('hr1');
+  hr1.style.top = (titleBottom + 24) + 'px';
+
+  var sectionRule = document.getElementById('sectionRule');
+  var ruleTop = titleBottom + 24 + 28;
+  sectionRule.style.top = ruleTop + 'px';
+  var ruleH = sectionRule.getBoundingClientRect().height;
+
+  // Position stage row
+  var stageTop = ruleTop + ruleH + 24;
+  ['stage0', 'stage1', 'stage2'].forEach(function(id) {
+    document.getElementById(id).style.top = stageTop + 'px';
+  });
+
+  // Draw arrows between stages
+  function stageRect(id) {
+    var el = document.querySelector('#' + id + ' .mockwin');
+    var r = el.getBoundingClientRect();
+    return { L: r.left - cr.left, R: r.right - cr.left,
+             cy: (r.top + r.bottom) / 2 - cr.top };
+  }
+  var s0 = stageRect('stage0'), s1 = stageRect('stage1'), s2 = stageRect('stage2');
+  var svg = document.getElementById('stage-arrows');
+  function addArrow(x1, y1, x2, y2) {
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#8b94a8'); line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-dasharray', '5,4');
+    line.setAttribute('marker-end', 'url(#sarr)');
+    svg.appendChild(line);
+  }
+  addArrow(s0.R + 6, s0.cy, s1.L - 6, s1.cy);
+  addArrow(s1.R + 6, s1.cy, s2.L - 6, s2.cy);
+
+  // Position 2×2 card grid below stages
+  function mockBottom(id) {
+    var el = document.querySelector('#' + id + ' .mockwin');
+    return el.getBoundingClientRect().bottom - cr.top;
+  }
+  var maxStageBottom = Math.max(mockBottom('stage0'), mockBottom('stage1'), mockBottom('stage2'));
+  var row1Top = maxStageBottom + 48;
+
+  var card0 = document.getElementById('card0'), card1 = document.getElementById('card1');
+  card0.style.top = row1Top + 'px'; card1.style.top = row1Top + 'px';
+  var row1H = Math.max(card0.getBoundingClientRect().height, card1.getBoundingClientRect().height);
+
+  var row2Top = row1Top + row1H + 28;
+  var card2 = document.getElementById('card2'), card3 = document.getElementById('card3');
+  card2.style.top = row2Top + 'px'; card3.style.top = row2Top + 'px';
+  var row2H = Math.max(card2.getBoundingClientRect().height, card3.getBoundingClientRect().height);
+
+  // Position flow strips
+  var flowTop = row2Top + row2H + 44;
+  var flowA = document.getElementById('flowA');
+  var flowB = document.getElementById('flowB');
+  flowA.style.top = flowTop + 'px';
+  var flowAH = flowA.getBoundingClientRect().height;
+  flowB.style.top = (flowTop + flowAH + 18) + 'px';
+
+  // Position callout beside flow strips
+  var callout = document.getElementById('callout');
+  var aTop = flowA.getBoundingClientRect().top - cr.top;
+  var bBottom = flowB.getBoundingClientRect().bottom - cr.top;
+  callout.style.top = aTop + 'px';
+  var calloutH = Math.max(120, bBottom - aTop);
+  callout.style.height = calloutH + 'px';
+
+  // Footer below everything
+  var footer = document.getElementById('footer');
+  var calloutBottom = callout.getBoundingClientRect().bottom - cr.top;
+  var lowest = Math.max(calloutBottom, bBottom);
+  footer.style.top = (lowest + 44) + 'px';
+};
+
+document.fonts.ready.then(function() { window.drawInfographic(); });
+</script>
+</body>
+</html>

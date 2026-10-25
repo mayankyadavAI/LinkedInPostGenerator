@@ -1,0 +1,142 @@
+{
+  "niche": "AI systems, infrastructure, and model architecture",
+
+  "persona": "A software engineer with a deep focus on AI and machine learning systems. I study model architecture, training infrastructure, and inference engineering daily — reading papers, tracing through source code, and running experiments in personal projects. I write to make complex AI concepts precise and accessible to other engineers. My posts are grounded in technical specifics, not industry buzz. I am an individual contributor and independent learner, not a founder or team lead — this is a personal knowledge journal, not a company channel.",
+
+  "content_slots": {
+
+    "news": {
+      "label": "New AI model / release, explained technically",
+      "topics": [
+        "What actually changed in the latest LLM release — architecture, not marketing",
+        "Comparing the new model against its predecessor: a technical diff, not a feature list",
+        "The benchmark everyone is citing this week — what it actually measures and what it misses",
+        "What the new model's context window, parameter count, and training data mean in practice",
+        "The inference optimizations behind the newest model release — how it runs faster or cheaper",
+        "Open-weight vs closed release: what the difference means for fine-tuning and deployment",
+        "The quantization or distillation method behind the newest small-model release",
+        "What a new model's technical report actually says versus what the announcement claimed",
+        "The new reasoning model: what is mechanistically different about how it generates responses",
+        "Mixture-of-Experts in the latest release — how routing works and what it costs at inference",
+        "The new multimodal model: how vision and language are actually fused at the architecture level",
+        "Tokenizer and vocabulary choices in the latest open-weight release — why they matter",
+        "What the system card for a new model reveals about its training data and evaluation approach",
+        "The new on-device model release — the engineering tradeoffs that made the size reduction possible"
+      ],
+      "tones": [
+        "Technical breakdown — a detail in the release most coverage missed",
+        "Data-grounded analysis from the technical report, not the press release",
+        "Precise contrarian take on what a specific benchmark number actually tells you",
+        "Clear first-principles explanation written as I work through it myself"
+      ]
+    },
+
+    "educational": {
+      "label": "AI concept explained for engineers",
+      "topics": [
+        "RAG explained precisely — what retrieval-augmented generation actually does at each step",
+        "How vector databases work under the hood — and when a simpler approach is the right call",
+        "LLM context windows: what the number measures and common ways engineers misuse it",
+        "AI agents in production: what the working architectures look like vs the demo architectures",
+        "How to evaluate LLM outputs systematically — beyond manual inspection",
+        "Embeddings: what they represent and why similarity search is more subtle than it looks",
+        "What a GPU actually does during LLM training — and why a CPU cannot substitute",
+        "CUDA cores, tensor cores, and memory bandwidth: which one is actually the bottleneck",
+        "Distributed training: how a model is split across hundreds of GPUs without desynchronizing",
+        "Model quantization: how precision reduction shrinks a model without proportional accuracy loss",
+        "Inference serving with vLLM: what it actually optimizes and why it matters at scale",
+        "KV cache explained: the memory structure that makes autoregressive generation tractable",
+        "Tokenization: how it works, where it breaks, and why the failure modes matter",
+        "The transformer forward pass: what happens to a token from input embedding to output logit",
+        "Why LLM training requires so much more memory than inference",
+        "Self-attention vs cross-attention: the mathematical and architectural distinction",
+        "Rotary positional embeddings (RoPE): the intuition behind the math",
+        "Flash Attention: how memory access patterns are reorganized to speed up attention computation",
+        "LoRA and QLoRA: how fine-tuning a billion-parameter model with a few million extra weights works",
+        "RLHF: the full pipeline from human preference labels to updated model weights",
+        "DPO vs RLHF: two alignment objectives, compared mechanistically",
+        "Mixture of Experts: why activating a fraction of model weights per token is a sound tradeoff",
+        "Diffusion model generation: the step-by-step denoising process from noise to image",
+        "Softmax temperature: why one scalar controls output diversity and what happens at extremes",
+        "Decoding strategies: greedy search, beam search, and sampling — tradeoffs and when each fits",
+        "The loss function in LLM training: what cross-entropy on next-token prediction actually measures",
+        "Batch size, learning rate, and training epochs — understanding the interaction, not just the defaults",
+        "Why hallucination happens: the probabilistic generation mechanism behind confident wrong answers",
+        "GGUF, GPTQ, AWQ: what each quantization format compresses and what it costs",
+        "Grounding in RAG: why retrieval alone does not eliminate hallucination",
+        "Chunking in RAG: how chunk size affects retrieval precision and recall",
+        "Reranking in RAG: the second-stage scoring step that most implementations skip"
+      ],
+      "tones": [
+        "Precise technical explanation that closes a gap most engineers have but rarely admit",
+        "First-principles walkthrough — the explanation I needed but had to piece together myself",
+        "Practical breakdown with direct engineering implications",
+        "Data-grounded insight that challenges a common assumption"
+      ]
+    },
+
+    "personal": {
+      "label": "Engineering study notes — learning in public",
+      "topics": [
+        "A concept I spent three days misunderstanding — and what finally made it clear",
+        "What re-reading the original attention paper revealed that I had glossed over the first time",
+        "An experiment I ran specifically to break something — and what the failure showed",
+        "A mistake in my own RAG implementation, how I diagnosed it, and what changed",
+        "What was wrong in my mental model of transformers until I implemented one from scratch",
+        "How following one question about KV caches led me somewhere unexpected",
+        "A paper that changed how I think about a concept I thought I already understood",
+        "What profiling my own slow inference code taught me about GPU memory access",
+        "A concept I could explain verbally but could not implement — and what bridging that gap cost me",
+        "What building a minimal transformer from scratch taught me that no tutorial covered",
+        "A week of focused AI study: what transferred, what did not, and what I am changing",
+        "The diagram that made a concept click after several explanations had not",
+        "What I learned from two papers that arrive at opposite conclusions on the same question",
+        "A question I assumed was obvious — and what happened when I actually tried to answer it",
+        "What reading a model technical report cover to cover revealed that the abstract did not"
+      ],
+      "tones": [
+        "Honest technical narrative — a real struggle, a real resolution",
+        "Precise and self-aware — 'my model was wrong, here is how I found out'",
+        "Specific about the confusion, not just the insight — sharing the process, not the highlight reel",
+        "Study-log register — direct, unpolished, in-progress"
+      ]
+    },
+
+    "advanced": {
+      "label": "Advanced AI systems and infrastructure",
+      "topics": [
+        "Why self-attention is still widely mischaracterized — even by practitioners",
+        "The latency-accuracy tradeoff in production AI inference: where the actual decisions are",
+        "Why inference optimization has more leverage than model selection at production scale",
+        "Zero-shot, few-shot, and fine-tuned models in production: what actually determines which to use",
+        "Agentic loops: the failure modes that only appear at scale, and architectural mitigations",
+        "Why the retrieval step is the weakest link in most RAG systems — and how to measure it",
+        "The observability infrastructure a production AI system requires that most teams skip",
+        "Why AI system evaluation is structurally harder than unit testing — and what to do about it",
+        "Model parallelism, data parallelism, and pipeline parallelism: how they compose in practice",
+        "Why memory bandwidth, not FLOPS, determines LLM inference throughput",
+        "Mixed-precision training: how FP16/BF16 and FP32 coexist without destabilizing gradients",
+        "What actually happens on the interconnect (NVLink, InfiniBand) during large-scale distributed training",
+        "Why serving an LLM at scale is a distributed systems problem with ML properties, not vice versa",
+        "Speculative decoding: how draft models accelerate inference without changing the target distribution",
+        "What scaling laws are actually measuring — and why compute-optimal training is not just 'train bigger'",
+        "Catastrophic forgetting: the mechanism behind fine-tuning degrading unrelated capabilities",
+        "Lost-in-the-middle: why long-context models still struggle with position-dependent retrieval",
+        "Gradient checkpointing: the memory-compute tradeoff and when it is worth the overhead",
+        "Sparse attention: what variants like Longformer and BigBird give up to extend context",
+        "Constitutional AI and RLAIF: using model-generated feedback to scale alignment signal",
+        "Why token probability does not correspond to model confidence in any well-calibrated sense",
+        "Multi-agent system bottlenecks: latency, state, and coordination failure at scale",
+        "Prompt caching and context caching: how they change the unit economics of LLM applications",
+        "SwiGLU vs ReLU activation functions: what the architectural change buys in practice"
+      ],
+      "tones": [
+        "Precise contrarian position backed by a specific technical mechanism",
+        "Deep systems insight from direct experience with the failure mode",
+        "Data-grounded analysis that challenges what the field commonly assumes",
+        "Senior engineering breakdown — the kind that prompts someone to rethink a prior decision"
+      ]
+    }
+
+  }
+}
