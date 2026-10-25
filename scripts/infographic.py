@@ -14,61 +14,63 @@ import pathlib
 import requests
 
 _PROCESS_CONTENT_PROMPT = """
-Generate content for a light-theme, detailed "how it works" LinkedIn infographic that breaks a topic down
-into a clear beginning → middle → end arc, illustrated like a step-by-step technical diagram. This is for
-an individual engineer's personal learning post — technical, precise, no business framing.
+You are designing content for a professional, visually polished LinkedIn infographic aimed at AI/ML
+engineers and technical practitioners. The infographic must look like it belongs in a high-quality
+engineering publication — precise language, clean structure, zero fluff.
 
 Topic: {topic}
 
 The LinkedIn post this infographic will accompany (the infographic MUST illustrate the SAME narrative —
-same claims, same specifics. Do not introduce facts not present in this post):
+same claims, same specifics, no invented facts):
 {post_text}
 
-First, read the post and identify its natural 3-part arc — use whichever framing actually fits:
-- If it's a technical mechanism: INPUT → PROCESS → OUTPUT (e.g. "You Write Code" → "Model Predicts" →
-  "Token Sampled")
-- If it's a problem/solution post: THE PROBLEM → THE FIX → THE RESULT
-- If it's a personal story or news reaction: BEFORE → THE MOMENT IT CHANGED → AFTER
-Pick whichever of these actually matches the post — don't force a mechanism onto a post that doesn't have one.
+Read the post and identify its natural 3-part arc. Use the framing that fits the post exactly:
+- Technical mechanism: INPUT → PROCESS → OUTPUT
+- Problem/solution: THE PROBLEM → THE FIX → THE RESULT
+- Comparison/contrast: BEFORE → THE SHIFT → AFTER
+- News/discovery: CONTEXT → THE FINDING → THE IMPLICATION
 
-This infographic has THREE sections. All of it must walk through that SAME 3-part arc, at increasing detail:
+This infographic has THREE structured sections, all walking through the same arc at increasing depth:
 
-1. "stages" — exactly 3 items for the 3-part arc identified above. Each has:
-   - "label": 2-3 words, Title Case
-   - "snippet": a short fake code/terminal/data line (max 22 characters) that represents that stage —
-     e.g. 'print("hello")', '01001 → 01110', '> Hello!', 'retry_count = 3', 'status: FAILED'. Even for a
-     personal/news story, phrase the stage as a short code- or log-line-flavored fragment (it's a visual
-     device, not literal code) — e.g. for "the bug appeared": 'ERROR: null ptr'.
+1. "stages" — exactly 3 items representing the arc at the highest level. Each has:
+   - "label": 2-3 words, Title Case — sharp and specific, not generic ("Token Sampling" not "The Process")
+   - "snippet": a realistic code/terminal/data fragment (max 22 chars) that visually represents the stage.
+     Use actual syntax where possible: 'logits[vocab]', 'p = softmax(z)', 'token = argmax(p)',
+     'loss = NaN', 'ctx_len = 128k', 'status: FAILED'. Even for non-code topics, use a log-line or
+     metric-style fragment — it's a visual device that signals technical credibility.
 
-2. "steps" — exactly 4 numbered cards walking through the arc in more detail than "stages" (step 1 is the
-   simplest entry point, step 4 is the payoff/end state). Each has:
-   - "label": 2-4 words, Title Case
-   - "points": exactly 3 short tag-like phrases, max 3 words each, plain text
+2. "steps" — exactly 4 numbered cards that walk through the arc in more detail (step 1 = entry point,
+   step 4 = payoff). Each has:
+   - "label": 2-4 words, Title Case — specific and action-oriented ("Compute Attention Scores",
+     not "Step One")
+   - "points": exactly 3 crisp technical phrases, max 4 words each. These should read like bullet
+     points from an engineering design doc — concrete, no adjective padding, no "enables X" or
+     "leverages Y" filler.
 
-3. Two flow summaries of the SAME arc at different granularities:
-   - "flow_a_items": 5-6 short words/phrases (1-2 words each) — the detailed/granular pipeline
-   - "flow_b_items": 4-5 short words/phrases (1-2 words each) — the simplified big-picture version
+3. Two flow summaries of the same arc at different granularities:
+   - "flow_a_items": 5-6 items (1-3 words each) — the detailed technical pipeline in order
+   - "flow_b_items": 4 items (1-2 words each) — the simplified big-picture arc
 
-Also:
-- title_line1 : a short, punchy, curiosity-driving hook phrase (3-5 words) matching the post's hook,
-  Title Case, NOT the raw topic name. Favor a bold, opinionated framing over a neutral description —
-  a contrast/reveal structure works well when it genuinely fits (e.g. "X Isn't One Thing." / "It's Y."
-  split across line1/line2), but don't force it if the post's actual angle is something else.
-- title_line2 : the payoff / rest of the hook (3-5 words), Title Case, completes line1. This is the line
-  that should stop a scroll — make it hit harder than line1, not just continue it politely.
-- tagline : one short, sharp line (under 10 words) that sets up the breakdown — specific, not generic
-  ("From typing code to seeing the output" beats "How it works").
-- hook : one short, punchy, quotable sentence (max 20 words) — the same core takeaway as the post's
-  closing thought, phrased so it reads well standalone (this is the line people screenshot).
-- section_label : a short (2-4 words), all-caps, punchy label naming what this specific breakdown is
-  (e.g. "UNDER THE HOOD", "HOW IT ACTUALLY WORKS", "THE REAL BREAKDOWN") — specific to this topic, not
-  a generic placeholder.
+Also produce these five metadata fields:
+- title_line1: 3-5 words, Title Case. A bold, specific technical claim or contrast — NOT a topic label.
+  ("Closed APIs Cap Control" is better than "Open vs Closed Models"). This is what stops the scroll.
+- title_line2: 3-5 words, Title Case. The payoff that completes line1. Should hit harder than line1,
+  not just continue it ("Open Weights Don't." completes a contrast opener cleanly).
+- tagline: under 10 words. A precise setup line for the breakdown — specific to this topic, not generic.
+  ("From raw logits to a sampled token" beats "How it works step by step").
+- hook: max 20 words. The single most quotable insight from the post — phrased as a standalone
+  declarative sentence that reads well when screenshotted out of context.
+- section_label: 2-4 words, ALL CAPS. Names what this breakdown is specifically about — not a
+  generic placeholder. ("LOGIT CONTROL CHAIN", "THE FALLBACK SEQUENCE", "ATTENTION UNDER THE HOOD").
 
-None of these five should sound like a textbook caption. Write them like a sharp engineer trying to
-make someone stop scrolling and actually read the post — direct, a little provocative, zero filler
-words ("comprehensive", "seamless", "revolutionize", "unlock").
+Standards for all fields:
+- Every label, point, and phrase must be specific to THIS topic — no generic filler that could apply
+  to any infographic ("Key Insight", "Important Step", "The Solution").
+- Technical terms should be used correctly and precisely — do not simplify to the point of inaccuracy.
+- Write for an audience of working engineers, not executives or beginners.
+- Zero marketing language: no "seamless", "robust", "powerful", "unlock", "revolutionize", "leverage".
 
-Return ONLY valid JSON — no markdown, no explanation:
+Return ONLY valid JSON — no markdown fences, no explanation:
 {{
   "title_line1": "...", "title_line2": "...", "tagline": "...", "hook": "...", "section_label": "...",
   "stages": [{{"label": "...", "snippet": "..."}}, {{"label": "...", "snippet": "..."}}, {{"label": "...", "snippet": "..."}}],
@@ -83,7 +85,7 @@ Return ONLY valid JSON — no markdown, no explanation:
 }}
 """.strip()
 
-_SYSTEM = "You generate structured JSON content for visual infographics. Return only valid JSON, no extra text."
+_SYSTEM = "You generate structured JSON content for professional technical infographics. Return only valid JSON, no extra text."
 
 
 def _clean_text(s: str) -> str:

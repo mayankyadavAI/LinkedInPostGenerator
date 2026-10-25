@@ -48,7 +48,6 @@ PLATFORM_CHAR_LIMITS = {
     "x":        280,
 }
 PLATFORM = "linkedin"  # this pipeline posts to LinkedIn only
-TARGET_POST_LENGTH = 1300  # soft target for a short, scannable post — well under the 3000 hard cap
 
 # ── Content slot (set by workflow; defaults to 'news') ────────────────────────
 CONTENT_SLOT = os.environ.get("CONTENT_SLOT", "news")
@@ -137,10 +136,12 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not 
 - Short, mobile-friendly lines — 1-2 sentences per paragraph, never more. No throat-clearing, no
   restating the same point twice in different words.
 - No business/funding/company content — stay on the technology itself.
-- No hashtags.
-- TARGET LENGTH: 900-1300 characters total. This is a post someone reads end-to-end in one glance while
-  scrolling, not an essay — every sentence must earn its place. 3000 characters is the hard ceiling, not
-  the goal.
+- TARGET LENGTH: up to 3000 characters. Write as much as the topic deserves — cover the hook,
+  the core insight, supporting specifics, and a closing line. Do not pad, but do not cut substance
+  to hit an arbitrary short target either. Every sentence must earn its place.
+- Add 3-5 relevant hashtags at the very end of the post on their own line (e.g. #MachineLearning
+  #AIEngineering #LLMs). Pick hashtags that are specific and searchable — not generic (#Tech, #AI)
+  and not invented. Use camelCase for multi-word tags.
 - NEVER open with a question (measurably the single worst opener). NEVER open with "Here's what/how/why"
   or a "Stop X, start Y" line. NEVER bridge a reveal with "The result?" or "Plot twist:" — just state it.
   NEVER announce candor ("Let me be honest", "Confession:", "unpopular opinion") without a specific,
@@ -148,15 +149,16 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not 
 - At most ONE contrast frame in the whole post ("it's not X, it's Y" or similar) — most posts should
   use zero. At most ONE rule-of-three, and it must be three concrete numbers or named things, never
   three interchangeable adjectives.
-- The closing question (if used) goes only at the very end, never earlier, and must name the specific
-  thing this post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
+- The closing question (if used) goes only at the very end before the hashtags, and must name the
+  specific thing this post is about — never a generic "Thoughts?", "What do you think?", or "Agree
+  or disagree?".
 - Optional power phrases you may use naturally, filled in with real specifics, if one genuinely fits
   (never force one in, never use more than one per post): {power_phrases}
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
 {{
-  "post_text": "the full LinkedIn post (no hashtags)",
+  "post_text": "the full LinkedIn post including hashtags at the end",
   "hook_score": <1-10 how likely this hook stops the scroll>,
   "viral_score": <1-10 overall viral potential>,
   "image_recommended": <true or false>,
@@ -212,10 +214,12 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX excep
 - Short, mobile-friendly lines — 1-2 sentences per paragraph, never more. No throat-clearing, no
   restating the same point twice in different words.
 - No business/funding/company content — stay on the technology itself.
-- No hashtags.
-- TARGET LENGTH: 900-1300 characters total. This is a post someone reads end-to-end in one glance while
-  scrolling, not an essay — every sentence must earn its place. 3000 characters is the hard ceiling, not
-  the goal.
+- TARGET LENGTH: up to 3000 characters. Write as much as the topic deserves — cover the hook,
+  the core insight, supporting specifics, and a closing line. Do not pad, but do not cut substance
+  to hit an arbitrary short target either. Every sentence must earn its place.
+- Add 3-5 relevant hashtags at the very end of the post on their own line (e.g. #MachineLearning
+  #AIEngineering #LLMs). Pick hashtags that are specific and searchable — not generic (#Tech, #AI)
+  and not invented. Use camelCase for multi-word tags.
 - NEVER open with a question (measurably the single worst opener). NEVER open with "Here's what/how/why"
   or a "Stop X, start Y" line. NEVER bridge a reveal with "The result?" or "Plot twist:" — just state it.
   NEVER announce candor ("Let me be honest", "Confession:", "unpopular opinion") without a specific,
@@ -223,15 +227,15 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX excep
 - At most ONE contrast frame in the whole post ("it's not X, it's Y" or similar) — most posts should
   use zero. At most ONE rule-of-three, and it must be three concrete numbers or named things, never
   three interchangeable adjectives.
-- The closing question goes only at the very end, never earlier, and must name the specific thing this
-  post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
+- The closing question goes only at the very end before the hashtags, and must name the specific thing
+  this post is about — never a generic "Thoughts?", "What do you think?", or "Agree or disagree?".
 - Optional power phrases you may use naturally, filled in with real specifics, if one genuinely fits
   (never force one in, never use more than one per post): {power_phrases}
 
 ━━━ OUTPUT ━━━
 Return ONLY valid JSON — no prose, no markdown fences, no explanation before or after:
 {{
-  "post_text": "the full LinkedIn post (no hashtags)",
+  "post_text": "the full LinkedIn post including hashtags at the end",
   "hook_score": <1-10 how likely this hook stops the scroll>,
   "viral_score": <1-10 overall viral potential>,
   "image_recommended": <true or false>,
@@ -343,11 +347,11 @@ def generate_text(prompt: str, system_instruction: str) -> str:
                             print(f"  [Gemini] Daily quota exhausted on {key_label}. Switching to {next_key}.")
                             daily_exhausted = True
                             break
-                        # 503 overloaded: only retry twice (10s, 20s) then move to next model.
+                        # 503 overloaded: use MAX_RETRIES with exponential backoff (15s, 30s, 45s, 60s).
                         # 429 quota: use the retry-after hint from the error, up to MAX_RETRIES.
                         is_503 = _is_retryable_server_error(e)
-                        max_attempts = 2 if is_503 else MAX_RETRIES
-                        wait = (10 * attempt) if is_503 else _parse_retry_seconds(e)
+                        max_attempts = MAX_RETRIES
+                        wait = min(RETRY_BASE_SECONDS * attempt, 60) if is_503 else _parse_retry_seconds(e)
                         kind = "overloaded (503)" if is_503 else "quota (429)"
                         print(f"  [Gemini] {kind} on {model_id} ({key_label}), attempt {attempt}/{max_attempts}. Retrying in {wait}s...")
                         if attempt < max_attempts:
