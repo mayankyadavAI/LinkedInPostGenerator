@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 renderer/output/*.png
 renderer/output/_tmp.html
+.kiro/
