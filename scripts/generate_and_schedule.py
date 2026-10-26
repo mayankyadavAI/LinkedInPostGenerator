@@ -270,7 +270,15 @@ def _is_quota_error(error: Exception) -> bool:
 
 def _is_retryable_server_error(error: Exception) -> bool:
     msg = str(error).lower()
-    return "503" in msg or "unavailable" in msg or "high demand" in msg
+    return (
+        "503" in msg
+        or "unavailable" in msg
+        or "high demand" in msg
+        or "server disconnected" in msg
+        or "connection reset" in msg
+        or "connection error" in msg
+        or "remotedisconnected" in msg
+    )
 
 
 def _is_daily_quota_exhausted(error: Exception) -> bool:
@@ -540,10 +548,14 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
             f"Original post:\n{post}\n\n"
             f"Output ONLY the shortened post text. Nothing else."
         )
-        post = generate_text(shorten_prompt, SYSTEM_PROMPT)
-        post = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', post)
-        post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
-        post = post.strip()
+        try:
+            shortened = generate_text(shorten_prompt, SYSTEM_PROMPT)
+            shortened = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', shortened)
+            shortened = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', shortened)
+            post = shortened.strip()
+        except Exception as shorten_err:
+            print(f"  [warn] Shorten attempt {shorten_attempt + 1} failed ({shorten_err}). Falling back to hard truncation.")
+            break
 
     # Last-resort hard truncation
     if len(post) > limit:
