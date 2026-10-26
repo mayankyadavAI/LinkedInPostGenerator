@@ -3,201 +3,345 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,900;1,9..40,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 1080px; overflow: hidden; }
 
   :root {
-    --paper:   #fbfaf7;
-    --ink:     #121317;
-    --accent:  #6d28d9;  /* punchy violet — primary accent (headline, badge 1, eyebrow) */
-    --amber:   #e8821c;  /* badge 2 */
-    --green:   #16a34a;  /* badge 3 */
-    --magenta: #db2777;  /* badge 4 */
-    --slate:   #6b7280;
-    --line:    #e4e2db;
-    --mockbg:  #14171f;
+    --paper:    #f8f7f4;
+    --surface:  #ffffff;
+    --surface2: #f2f0ec;
+    --ink:      #111318;
+    --ink2:     #4a4f5c;
+    --ink3:     #9098a9;
+    --blue:     #2563eb;
+    --violet:   #7c3aed;
+    --teal:     #0d9488;
+    --amber:    #d97706;
+    --rose:     #db2777;
+    --border:   #e4e2dc;
+    --mockbg:   #111827;
   }
 
+  /* ── page shell ── */
   .page {
     width: 1080px; height: 1410px;
     background: var(--paper);
     position: relative; overflow: hidden;
     font-family: 'Inter', sans-serif;
-    border: 6px solid var(--ink);
   }
 
-  .content { position: absolute; left: 64px; top: 0; right: 64px; bottom: 0; }
+  /* subtle dot-grid background */
+  .page::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none; z-index: 0;
+  }
 
-  /* ── header ── */
+  /* top accent bar — thick bold editorial stripe */
+  .accent-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 6px; z-index: 2;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--violet) 45%, var(--teal) 100%);
+  }
+
+  .content {
+    position: absolute; left: 60px; top: 0; right: 60px; bottom: 0; z-index: 1;
+  }
+
+  /* ── header row ── */
+  .header-row {
+    position: absolute; top: 36px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
   .eyebrow {
-    position: absolute; left: 0; top: 36px; display: flex; align-items: center; gap: 9px;
-    background: #ffffff; border: 2.5px solid var(--accent); border-radius: 999px;
-    padding: 8px 20px 8px 16px; width: fit-content;
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--surface);
+    border: 2px solid var(--blue);
+    border-radius: 8px; padding: 8px 18px 8px 14px;
+    box-shadow: 3px 3px 0 rgba(37,99,235,0.12);
   }
-  .eyebrow-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .eyebrow-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--blue);
+  }
   .eyebrow span {
-    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 17px;
-    color: var(--accent); letter-spacing: 0.4px;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
+    color: var(--blue); letter-spacing: 1.4px; text-transform: uppercase;
   }
-  .corner-mark {
-    position: absolute; right: 0; top: 32px;
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px;
-    color: #ffffff; background: var(--accent); border-radius: 10px;
-    padding: 9px 15px;
+  .corner-tag {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px;
+    color: var(--surface); background: var(--ink);
+    border-radius: 6px; padding: 7px 14px;
+    letter-spacing: 0.3px;
   }
 
-  .title-block { position: absolute; left: 0; top: 90px; width: 820px; }
+  /* ── title block ── */
+  .title-block { position: absolute; left: 0; top: 88px; width: 860px; }
   .h-line {
-    font-family: 'Archivo Black', 'Space Grotesk', sans-serif; font-weight: 400; font-size: 66px;
-    line-height: 1.08; letter-spacing: -0.5px;
+    font-family: 'DM Sans', 'Inter', sans-serif; font-weight: 900;
+    font-size: 64px; line-height: 1.06; letter-spacing: -1.5px;
   }
   .h-line.l1 { color: var(--ink); }
-  .h-line.l2 { color: var(--accent); text-shadow: 3px 3px 0 rgba(109,40,217,0.18); }
+  .h-line.l2 {
+    color: transparent;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--violet) 60%, var(--teal) 100%);
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .tagline-row {
+    display: flex; align-items: center; gap: 12px; margin-top: 14px;
+  }
+  .tagline-bar {
+    width: 3px; height: 22px; border-radius: 2px;
+    background: linear-gradient(180deg, var(--blue), var(--violet));
+    flex-shrink: 0;
+  }
   .tagline {
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 23px;
-    color: var(--slate); margin-top: 16px;
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 19px;
+    color: var(--ink2);
   }
 
-  .hr { position: absolute; left: 0; width: 952px; height: 1px; background: var(--line); }
-
-  /* ── section rule (centered flanked label, Euron-style) ── */
-  .section-rule { position: absolute; left: 0; width: 952px; display: flex; align-items: center; gap: 16px; }
-  .section-rule .rule-line { flex: 1; height: 2px; background: var(--accent); opacity: 0.3; }
-  .section-rule .rule-text {
-    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 19px;
-    letter-spacing: 1.5px; color: var(--accent); white-space: nowrap;
+  /* divider */
+  .divider {
+    position: absolute; left: 0; width: 960px; height: 2px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--violet) 50%, transparent 100%);
+    opacity: 0.2;
   }
 
-  /* ── top mockup row ── */
+  /* ── section label ── */
+  .section-label {
+    position: absolute; left: 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sl-bar { width: 3px; height: 18px; background: var(--blue); border-radius: 2px; }
+  .sl-text {
+    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 11px;
+    color: var(--blue); letter-spacing: 2.5px; text-transform: uppercase;
+  }
+
+  /* ── stage mockups ── */
   .stage { position: absolute; }
+  .stage-label-row {
+    display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
+  }
+  .stage-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--c);
+  }
   .stage-label {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px;
-    margin-bottom: 11px;
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12px;
+    letter-spacing: 1.8px; text-transform: uppercase; color: var(--c);
   }
+
   .mockwin {
-    width: 100%; height: 168px; background: var(--mockbg); border-radius: 12px;
-    padding: 14px 16px; box-shadow: 7px 8px 0 rgba(0,0,0,0.16);
-    border-top: 4px solid var(--c);
+    width: 100%; height: 158px;
+    background: var(--mockbg); border-radius: 12px;
+    padding: 14px 16px;
+    border-top: 3px solid var(--c);
+    box-shadow: 4px 6px 0 rgba(0,0,0,0.15), 0 2px 12px rgba(0,0,0,0.1);
   }
-  .mockwin .dots { display: flex; gap: 6px; margin-bottom: 14px; }
-  .mockwin .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mockwin .dots { display: flex; gap: 5px; margin-bottom: 12px; }
+  .mockwin .dot { width: 9px; height: 9px; border-radius: 50%; }
   .mockwin .dot.r { background: #ff5f56; }
   .mockwin .dot.y { background: #ffbd2e; }
   .mockwin .dot.g { background: #27c93f; }
   .mockwin .snippet {
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; line-height: 1.5;
+    font-family: 'JetBrains Mono', monospace; font-weight: 500;
+    font-size: 16px; line-height: 1.65;
   }
-  .mockwin.editor .snippet { color: #c4b5fd; }
-  .mockwin.terminal .snippet { color: #4ade80; }
-  .mockwin.chip { display: flex; align-items: center; justify-content: center; flex-direction: column; }
-  .mockwin.chip svg { width: 64px; height: 64px; }
-  .mockwin.chip .snippet { color: var(--amber); margin-top: 10px; font-size: 15px; text-align: center; }
+  .mockwin.chip {
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+  }
+  .mockwin.chip svg { width: 52px; height: 52px; }
+  .mockwin.chip .snippet { margin-top: 10px; font-size: 13px; text-align: center; }
 
-  .stage-arrow { position: absolute; }
+  /* stage color bindings */
+  .stage0 .mockwin { --c: var(--blue); }
+  .stage0 .stage-dot { --c: var(--blue); }
+  .stage0 .stage-label { --c: var(--blue); }
+  .stage0 .snippet { color: #60a5fa; }
 
-  /* ── numbered step cards ── */
+  .stage1 .mockwin { --c: var(--violet); }
+  .stage1 .stage-dot { --c: var(--violet); }
+  .stage1 .stage-label { --c: var(--violet); }
+  .stage1 .snippet { color: #c4b5fd; }
+
+  .stage2 .mockwin { --c: var(--teal); }
+  .stage2 .stage-dot { --c: var(--teal); }
+  .stage2 .stage-label { --c: var(--teal); }
+  .stage2 .snippet { color: #5eead4; }
+
+  /* ── step cards ── */
   .card {
-    position: absolute; border: 5px solid var(--c); border-radius: 18px;
-    background: #ffffff; padding: 20px 22px 16px;
-    box-shadow: 8px 9px 0 rgba(23,24,28,0.10);
+    position: absolute;
+    background: var(--surface); border-radius: 14px;
+    border: 2px solid var(--border);
+    border-left: 4px solid var(--c);
+    padding: 20px 22px 18px 26px;
+    box-shadow: 4px 5px 0 rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.05);
   }
-  .card.c1 { --c: var(--accent); }
-  .card.c2 { --c: var(--amber); }
-  .card.c3 { --c: var(--green); }
-  .card.c4 { --c: var(--magenta); }
-  .card-badge {
-    position: absolute; top: -22px; left: -22px; width: 46px; height: 46px;
-    border-radius: 50%; background: var(--c); border: 3.5px solid var(--ink);
+  .card.c1 { --c: var(--blue); }
+  .card.c2 { --c: var(--violet); }
+  .card.c3 { --c: var(--teal); }
+  .card.c4 { --c: var(--amber); }
+
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .card-num {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--c); color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 23px; color: #fff;
-    box-shadow: 3px 4px 0 rgba(23,24,28,0.22);
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 14px; flex-shrink: 0;
   }
   .card-title {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px;
-    color: var(--ink); margin-bottom: 11px; letter-spacing: -0.2px;
+    font-family: 'DM Sans', 'Inter', sans-serif; font-weight: 700; font-size: 21px;
+    color: var(--ink); letter-spacing: -0.2px;
   }
   .card-pts { list-style: none; }
   .card-pts li {
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: #2a2d33;
-    line-height: 1.5; padding-left: 30px; position: relative; margin-bottom: 4px;
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 16px;
+    color: var(--ink2); line-height: 1.6;
+    padding-left: 20px; position: relative; margin-bottom: 4px;
   }
   .card-pts li::before {
-    content: "✓"; position: absolute; left: 0; top: 3px; width: 19px; height: 19px;
-    border-radius: 50%; background: var(--c); color: #fff;
-    font-size: 12px; font-weight: 800; line-height: 19px; text-align: center;
+    content: "–"; position: absolute; left: 0;
+    color: var(--c); font-weight: 700;
   }
 
-  /* ── bottom flow strips ── */
+  /* ── flow strips ── */
   .flow-block { position: absolute; left: 0; width: 660px; }
   .flow-label {
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px;
-    color: var(--accent); letter-spacing: 0.5px; margin-bottom: 10px;
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 10px;
+    color: var(--blue); letter-spacing: 2.5px; text-transform: uppercase;
+    margin-bottom: 10px;
   }
-  .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
   .flow-chip {
-    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink);
-    border: 2.5px solid var(--ink); border-radius: 8px; background: #ffffff;
-    padding: 7px 11px; white-space: nowrap; box-shadow: 2px 3px 0 rgba(23,24,28,0.10);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
+    color: var(--ink);
+    border: 2px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    padding: 6px 12px; white-space: nowrap;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
   }
-  .flow-arrow { color: var(--ink); font-size: 16px; font-weight: 700; }
+  .flow-chevron {
+    display: flex; align-items: center; color: var(--ink3);
+  }
+  .flow-chevron svg { width: 14px; height: 14px; overflow: visible; }
 
-  /* ── sticky note ── */
-  .sticky {
-    position: absolute; right: 0; width: 250px;
-    background: #ffd94a; border: 3px solid var(--ink); border-radius: 4px;
-    transform: rotate(3deg); padding: 22px 18px 14px;
-    box-shadow: 7px 9px 0 rgba(0,0,0,0.18);
+  /* ── insight callout ── */
+  .callout {
+    position: absolute; right: 0; width: 248px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 18px 18px 22px;
+    box-shadow: 4px 5px 0 rgba(0,0,0,0.07);
+    overflow: hidden;
   }
-  .sticky-pin {
-    position: absolute; left: 50%; top: -12px; transform: translateX(-50%);
-    width: 20px; height: 20px; border-radius: 50%; background: #e83b3b; border: 2px solid var(--ink);
+  .callout::before {
+    content: '';
+    position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
+    background: linear-gradient(180deg, var(--blue), var(--violet), var(--teal));
+    border-radius: 12px 0 0 12px;
   }
-  .sticky-text {
-    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.4;
+  .callout::after {
+    content: '\201C';
+    position: absolute; top: -8px; right: 12px;
+    font-family: 'DM Sans', serif; font-size: 80px; font-weight: 900;
+    color: rgba(37,99,235,0.06); line-height: 1;
+    pointer-events: none;
+  }
+  .callout-label {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 10px;
+    color: var(--violet); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .callout-label-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--violet);
+  }
+  .callout-text {
+    font-family: 'DM Sans', 'Inter', sans-serif; font-style: italic;
+    font-weight: 500; font-size: 16px;
+    color: var(--ink); line-height: 1.55;
+    position: relative; z-index: 1;
   }
 
   /* ── footer ── */
   .footer {
-    position: absolute; left: 0; width: 952px;
-    display: flex; align-items: center; justify-content: center;
+    position: absolute; left: 0; width: 960px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px;
+    border-top: 2px solid var(--border);
   }
-  .footer-tag { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 19px; color: var(--slate); }
+  .footer-handle {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px;
+    color: var(--blue);
+  }
+  .footer-tag {
+    font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px;
+    color: var(--ink3);
+  }
+  .footer-badge {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px;
+    color: var(--ink2);
+    border: 2px solid var(--border);
+    border-radius: 4px; padding: 3px 8px;
+    letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
 <div class="page">
+  <div class="accent-bar"></div>
   <div class="content">
 
-    <div class="eyebrow"><div class="eyebrow-dot"></div><span>AI SYSTEMS // HOW IT WORKS</span></div>
-    <div class="corner-mark">&lt;/&gt;</div>
+    <div class="header-row">
+      <div class="eyebrow">
+        <div class="eyebrow-dot"></div>
+        <span>AI Systems · How It Works</span>
+      </div>
+      <div class="corner-tag">&lt;/&gt; eng notes</div>
+    </div>
 
     <div class="title-block">
       <div id="h1" class="h-line l1">{{ title_line1 }}</div>
       <div id="h2" class="h-line l2">{{ title_line2 }}</div>
-      <div class="tagline">{{ tagline }}</div>
+      <div class="tagline-row">
+        <div class="tagline-bar"></div>
+        <div class="tagline">{{ tagline }}</div>
+      </div>
     </div>
 
-    <div class="hr" id="hr1"></div>
+    <div class="divider" id="hr1"></div>
 
-    <div class="section-rule" id="sectionRule">
-      <span class="rule-line"></span><span class="rule-text">{{ section_label }}</span><span class="rule-line"></span>
+    <div class="section-label" id="sectionRule">
+      <div class="sl-bar"></div>
+      <div class="sl-text">{{ section_label }}</div>
     </div>
 
-    <!-- Top mockup row: 3 stages (input / process / output), fixed kinds -->
-    <div class="stage" id="stage0" style="left:0px;width:290px">
-      <div class="stage-label" style="color:var(--accent)">{{ stages[0].label }}</div>
-      <div class="mockwin editor" style="--c:var(--accent)">
+    <!-- Stage row -->
+    <div class="stage stage0" id="stage0" style="left:0px;width:290px">
+      <div class="stage-label-row">
+        <div class="stage-dot"></div>
+        <div class="stage-label">{{ stages[0].label }}</div>
+      </div>
+      <div class="mockwin">
         <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
         <div class="snippet">{{ stages[0].snippet }}</div>
       </div>
     </div>
 
-    <div class="stage" id="stage1" style="left:331px;width:290px">
-      <div class="stage-label" style="color:var(--amber)">{{ stages[1].label }}</div>
-      <div class="mockwin chip" style="--c:var(--amber)">
-        <svg viewBox="0 0 30 30" fill="none" stroke="#e8821c" stroke-width="2.2" stroke-linecap="round">
+    <div class="stage stage1" id="stage1" style="left:335px;width:290px">
+      <div class="stage-label-row">
+        <div class="stage-dot"></div>
+        <div class="stage-label">{{ stages[1].label }}</div>
+      </div>
+      <div class="mockwin chip">
+        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:#c4b5fd">
           <rect x="8" y="8" width="14" height="14" rx="2"/>
           <line x1="12" y1="2" x2="12" y2="8"/><line x1="18" y1="2" x2="18" y2="8"/>
           <line x1="12" y1="22" x2="12" y2="28"/><line x1="18" y1="22" x2="18" y2="28"/>
@@ -208,67 +352,117 @@
       </div>
     </div>
 
-    <div class="stage" id="stage2" style="left:662px;width:290px">
-      <div class="stage-label" style="color:var(--accent)">{{ stages[2].label }}</div>
-      <div class="mockwin terminal" style="--c:var(--accent)">
+    <div class="stage stage2" id="stage2" style="left:670px;width:290px">
+      <div class="stage-label-row">
+        <div class="stage-dot"></div>
+        <div class="stage-label">{{ stages[2].label }}</div>
+      </div>
+      <div class="mockwin">
         <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
         <div class="snippet">{{ stages[2].snippet }}</div>
       </div>
     </div>
 
+    <!-- Gradient flow arrows between stages -->
     <svg id="stage-arrows" style="position:absolute;left:0;top:0;pointer-events:none;overflow:visible"
-         width="952" height="560">
+         width="960" height="800">
       <defs>
-        <marker id="sarr" markerWidth="12" markerHeight="8" refX="9" refY="4" orient="auto">
-          <polygon points="0 0.5, 11 4, 0 7.5" fill="#121317"/>
+        <linearGradient id="arr-grad-01" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#2563eb" stop-opacity="0.2"/>
+          <stop offset="60%" stop-color="#2563eb" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.9"/>
+        </linearGradient>
+        <linearGradient id="arr-grad-12" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.2"/>
+          <stop offset="60%" stop-color="#7c3aed" stop-opacity="0.7"/>
+          <stop offset="100%" stop-color="#0d9488" stop-opacity="0.9"/>
+        </linearGradient>
+        <marker id="arrowhead-01" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0.5, 9.5 3.5, 0 6.5" fill="#7c3aed" opacity="0.9"/>
+        </marker>
+        <marker id="arrowhead-12" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+          <polygon points="0 0.5, 9.5 3.5, 0 6.5" fill="#0d9488" opacity="0.9"/>
         </marker>
       </defs>
     </svg>
 
-    <!-- 4 numbered step cards, 2x2 grid -->
+    <!-- 4 step cards 2×2 -->
     <div class="card c1" id="card0" style="left:0px;width:460px">
-      <div class="card-badge">1</div>
-      <div class="card-title">{{ steps[0].label }}</div>
+      <div class="card-header"><div class="card-num">01</div><div class="card-title">{{ steps[0].label }}</div></div>
       <ul class="card-pts">{% for p in steps[0].points %}<li>{{ p }}</li>{% endfor %}</ul>
     </div>
-    <div class="card c2" id="card1" style="left:492px;width:460px">
-      <div class="card-badge">2</div>
-      <div class="card-title">{{ steps[1].label }}</div>
+    <div class="card c2" id="card1" style="left:500px;width:460px">
+      <div class="card-header"><div class="card-num">02</div><div class="card-title">{{ steps[1].label }}</div></div>
       <ul class="card-pts">{% for p in steps[1].points %}<li>{{ p }}</li>{% endfor %}</ul>
     </div>
     <div class="card c3" id="card2" style="left:0px;width:460px">
-      <div class="card-badge">3</div>
-      <div class="card-title">{{ steps[2].label }}</div>
+      <div class="card-header"><div class="card-num">03</div><div class="card-title">{{ steps[2].label }}</div></div>
       <ul class="card-pts">{% for p in steps[2].points %}<li>{{ p }}</li>{% endfor %}</ul>
     </div>
-    <div class="card c4" id="card3" style="left:492px;width:460px">
-      <div class="card-badge">4</div>
-      <div class="card-title">{{ steps[3].label }}</div>
+    <div class="card c4" id="card3" style="left:500px;width:460px">
+      <div class="card-header"><div class="card-num">04</div><div class="card-title">{{ steps[3].label }}</div></div>
       <ul class="card-pts">{% for p in steps[3].points %}<li>{{ p }}</li>{% endfor %}</ul>
     </div>
 
-    <!-- Bottom flow strips (left column) + sticky note (right column) -->
+    <!-- Flow strips + callout -->
     <div class="flow-block" id="flowA">
-      <div class="flow-label">BEHIND THE SCENES</div>
+      <div class="flow-label">pipeline</div>
       <div class="flow-row">
-        {% for item in flow_a_items %}<div class="flow-chip">{{ item }}</div>{% if not loop.last %}<span class="flow-arrow">→</span>{% endif %}{% endfor %}
+        {% for item in flow_a_items %}
+        <div class="flow-chip">{{ item }}</div>
+        {% if not loop.last %}
+        <span class="flow-chevron">
+          <svg viewBox="0 0 14 14" fill="none">
+            <defs>
+              <linearGradient id="chev-la-{{ loop.index }}" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.9"/>
+              </linearGradient>
+            </defs>
+            <polyline points="3,2 9,7 3,12" stroke="url(#chev-la-{{ loop.index }})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </span>
+        {% endif %}
+        {% endfor %}
       </div>
     </div>
 
     <div class="flow-block" id="flowB">
-      <div class="flow-label">THE BIG PICTURE</div>
+      <div class="flow-label">summary</div>
       <div class="flow-row">
-        {% for item in flow_b_items %}<div class="flow-chip">{{ item }}</div>{% if not loop.last %}<span class="flow-arrow">→</span>{% endif %}{% endfor %}
+        {% for item in flow_b_items %}
+        <div class="flow-chip">{{ item }}</div>
+        {% if not loop.last %}
+        <span class="flow-chevron">
+          <svg viewBox="0 0 14 14" fill="none">
+            <defs>
+              <linearGradient id="chev-lb-{{ loop.index }}" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#0d9488" stop-opacity="0.9"/>
+              </linearGradient>
+            </defs>
+            <polyline points="3,2 9,7 3,12" stroke="url(#chev-lb-{{ loop.index }})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </span>
+        {% endif %}
+        {% endfor %}
       </div>
     </div>
 
-    <div class="sticky" id="sticky" style="top:1195px">
-      <div class="sticky-pin"></div>
-      <div class="sticky-text">{{ hook }}</div>
+    <!-- Pull-quote callout -->
+    <div class="callout" id="callout">
+      <div class="callout-label">
+        <div class="callout-label-dot"></div>
+        key insight
+      </div>
+      <div class="callout-text">{{ hook }}</div>
     </div>
 
-    <div class="footer" id="footer" style="top:1500px">
-      <div class="footer-tag">Daily notes on the tech behind AI — systems, models, infra</div>
+    <!-- Footer -->
+    <div class="footer" id="footer">
+      <div class="footer-handle">{{ infographic_handle if infographic_handle else "@AISystemsNotes" }}</div>
+      <div class="footer-tag">daily notes on the systems behind AI</div>
+      <div class="footer-badge">AI/ML</div>
     </div>
 
   </div>
@@ -281,102 +475,106 @@ window.drawInfographic = function() {
   if (window._infoDone) return;
   window._infoDone = true;
 
-  // All dynamic positioning is done relative to .content's own box, since every
-  // absolutely-positioned element in this template is a direct child of .content
-  // (its "top"/"left" values are interpreted relative to .content's padding box).
   var content = document.querySelector('.content');
   var cr = content.getBoundingClientRect();
 
-  // ── Shrink title lines if too wide ──
+  // Shrink oversized title lines
   ['h1','h2'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var sz = parseFloat(getComputedStyle(el).fontSize);
-    while (el.scrollWidth > 800 && sz > 30) { sz--; el.style.fontSize = sz + 'px'; }
+    while (el.scrollWidth > 840 && sz > 28) { sz -= 2; el.style.fontSize = sz + 'px'; }
   });
 
-  // ── Shrink card titles if too wide ──
+  // Shrink card titles
   document.querySelectorAll('.card-title').forEach(function(el) {
     var sz = parseFloat(getComputedStyle(el).fontSize);
-    while (el.scrollWidth > 400 && sz > 17) { sz--; el.style.fontSize = sz + 'px'; }
+    while (el.scrollWidth > 390 && sz > 15) { sz--; el.style.fontSize = sz + 'px'; }
   });
 
-  // ── Shrink mockup snippets if too wide ──
+  // Shrink snippets
   document.querySelectorAll('.mockwin .snippet').forEach(function(el) {
     var sz = parseFloat(getComputedStyle(el).fontSize);
-    while (el.scrollWidth > 250 && sz > 11) { sz--; el.style.fontSize = sz + 'px'; }
+    while (el.scrollWidth > 258 && sz > 11) { sz--; el.style.fontSize = sz + 'px'; }
   });
 
-  // ── Position the divider under the title block, then the stage row under that ──
+  // Position divider and section label
   var titleBlock = document.querySelector('.title-block');
   var titleBottom = titleBlock.getBoundingClientRect().bottom - cr.top;
+
   var hr1 = document.getElementById('hr1');
-  hr1.style.top = (titleBottom + 26) + 'px';
+  hr1.style.top = (titleBottom + 22) + 'px';
 
   var sectionRule = document.getElementById('sectionRule');
-  var ruleTop = titleBottom + 26 + 34;
+  var ruleTop = titleBottom + 22 + 26;
   sectionRule.style.top = ruleTop + 'px';
   var ruleH = sectionRule.getBoundingClientRect().height;
 
-  var stageTop = ruleTop + ruleH + 30;
+  // Position stages
+  var stageTop = ruleTop + ruleH + 22;
   ['stage0', 'stage1', 'stage2'].forEach(function(id) {
     document.getElementById(id).style.top = stageTop + 'px';
   });
 
-  // ── Draw arrows between the 3 top stages (measured after their top is set) ──
+  // Gradient arrows
   function stageRect(id) {
     var el = document.querySelector('#' + id + ' .mockwin');
     var r = el.getBoundingClientRect();
-    return { L: r.left - cr.left, R: r.right - cr.left, T: r.top - cr.top, B: r.bottom - cr.top,
-             cy: (r.top + r.bottom) / 2 - cr.top };
+    return { L: r.left - cr.left, R: r.right - cr.left, cy: (r.top + r.bottom) / 2 - cr.top };
   }
   var s0 = stageRect('stage0'), s1 = stageRect('stage1'), s2 = stageRect('stage2');
   var svg = document.getElementById('stage-arrows');
-  function addArrow(x1, y1, x2, y2) {
+
+  function addGradientArrow(x1, y1, x2, y2, gradId, headId) {
     var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-    line.setAttribute('stroke', '#121317'); line.setAttribute('stroke-width', '3.2');
-    line.setAttribute('marker-end', 'url(#sarr)');
+    line.setAttribute('x1', x1 + 4); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2 - 10); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', 'url(#' + gradId + ')');
+    line.setAttribute('stroke-width', '2.5');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('marker-end', 'url(#' + headId + ')');
     svg.appendChild(line);
   }
-  addArrow(s0.R + 6, s0.cy, s1.L - 6, s1.cy);
-  addArrow(s1.R + 6, s1.cy, s2.L - 6, s2.cy);
+  addGradientArrow(s0.R, s0.cy, s1.L, s1.cy, 'arr-grad-01', 'arrowhead-01');
+  addGradientArrow(s1.R, s1.cy, s2.L, s2.cy, 'arr-grad-12', 'arrowhead-12');
 
-  // ── Position the 2x2 card grid below the stage row, each row sized to its own content ──
-  var maxStageBottom = Math.max(s0.B, s1.B, s2.B);
-  var row1Top = maxStageBottom + 55;
-  var card0 = document.getElementById('card0'), card1 = document.getElementById('card1');
-  card0.style.top = row1Top + 'px';
-  card1.style.top = row1Top + 'px';
-  var row1H = Math.max(card0.getBoundingClientRect().height, card1.getBoundingClientRect().height);
+  // 2×2 card grid
+  function mockBottom(id) {
+    var el = document.querySelector('#' + id + ' .mockwin');
+    return el.getBoundingClientRect().bottom - cr.top;
+  }
+  var maxStageBottom = Math.max(mockBottom('stage0'), mockBottom('stage1'), mockBottom('stage2'));
+  var row1Top = maxStageBottom + 44;
 
-  var row2Top = row1Top + row1H + 36;
-  var card2 = document.getElementById('card2'), card3 = document.getElementById('card3');
-  card2.style.top = row2Top + 'px';
-  card3.style.top = row2Top + 'px';
-  var row2H = Math.max(card2.getBoundingClientRect().height, card3.getBoundingClientRect().height);
+  var c0 = document.getElementById('card0'), c1 = document.getElementById('card1');
+  c0.style.top = row1Top + 'px'; c1.style.top = row1Top + 'px';
+  var row1H = Math.max(c0.getBoundingClientRect().height, c1.getBoundingClientRect().height);
 
-  // ── Position flow strips below the card grid ──
-  var flowTop = row2Top + row2H + 50;
+  var row2Top = row1Top + row1H + 24;
+  var c2 = document.getElementById('card2'), c3 = document.getElementById('card3');
+  c2.style.top = row2Top + 'px'; c3.style.top = row2Top + 'px';
+  var row2H = Math.max(c2.getBoundingClientRect().height, c3.getBoundingClientRect().height);
+
+  // Flow strips
+  var flowTop = row2Top + row2H + 40;
   var flowA = document.getElementById('flowA');
   var flowB = document.getElementById('flowB');
   flowA.style.top = flowTop + 'px';
   var flowAH = flowA.getBoundingClientRect().height;
-  flowB.style.top = (flowTop + flowAH + 22) + 'px';
+  flowB.style.top = (flowTop + flowAH + 16) + 'px';
 
-  // ── Position sticky note beside the flow strips, sized to match their combined height ──
-  var sticky = document.getElementById('sticky');
+  // Callout
+  var callout = document.getElementById('callout');
   var aTop = flowA.getBoundingClientRect().top - cr.top;
   var bBottom = flowB.getBoundingClientRect().bottom - cr.top;
-  sticky.style.top = aTop + 'px';
-  sticky.style.height = Math.max(140, bBottom - aTop) + 'px';
+  callout.style.top = aTop + 'px';
+  callout.style.height = Math.max(120, bBottom - aTop) + 'px';
 
-  // ── Footer sits just below whichever of (sticky, flowB) is lower ──
+  // Footer
   var footer = document.getElementById('footer');
-  var stickyBottom = sticky.getBoundingClientRect().bottom - cr.top;
-  var lowest = Math.max(stickyBottom, bBottom);
-  footer.style.top = (lowest + 50) + 'px';
+  var calloutBottom = callout.getBoundingClientRect().bottom - cr.top;
+  var lowest = Math.max(calloutBottom, bBottom);
+  footer.style.top = (lowest + 40) + 'px';
 };
 
 document.fonts.ready.then(function() { window.drawInfographic(); });
