@@ -2,10 +2,10 @@ name: Daily LinkedIn Post
 
 on:
   schedule:
-    - cron: '30 4 * * *'   # 10:00 AM IST — Breaking AI news / hot take
-    - cron: '30 7 * * *'   # 1:00 PM IST  — AI educational post
-    - cron: '30 12 * * *'  # 6:00 PM IST  — Personal learning / build-in-public
-    - cron: '30 16 * * *'  # 10:00 PM IST — Advanced AI concept
+    - cron: '33 4 * * *'   # 10:03 AM IST — Breaking AI news / hot take
+    - cron: '27 7 * * *'   # 12:57 PM IST — AI educational post
+    - cron: '17 12 * * *'  # 5:47 PM IST  — Personal learning / build-in-public
+    - cron: '43 16 * * *'  # 10:13 PM IST — Advanced AI concept
   workflow_dispatch:
     inputs:
       content_slot:
@@ -55,10 +55,10 @@ jobs:
             echo "slot=${{ github.event.inputs.content_slot }}" >> $GITHUB_OUTPUT
           else
             case "${{ github.event.schedule }}" in
-              "30 4 * * *")  echo "slot=news"        >> $GITHUB_OUTPUT ;;
-              "30 7 * * *")  echo "slot=educational" >> $GITHUB_OUTPUT ;;
-              "30 12 * * *") echo "slot=personal"    >> $GITHUB_OUTPUT ;;
-              "30 16 * * *") echo "slot=advanced"    >> $GITHUB_OUTPUT ;;
+              "33 4 * * *")  echo "slot=news"        >> $GITHUB_OUTPUT ;;
+              "27 7 * * *")  echo "slot=educational" >> $GITHUB_OUTPUT ;;
+              "17 12 * * *") echo "slot=personal"    >> $GITHUB_OUTPUT ;;
+              "43 16 * * *") echo "slot=advanced"    >> $GITHUB_OUTPUT ;;
               *)             echo "slot=news"         >> $GITHUB_OUTPUT ;;
             esac
           fi
