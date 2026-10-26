@@ -63,7 +63,7 @@ def render(content: dict, out_path: str, template: str = TEMPLATE, scale: int = 
                 device_scale_factor=scale,
             )
             page.goto(f"file://{tmp_html}")
-            page.wait_for_load_state("networkidle")   # waits for Google Fonts
+            page.wait_for_load_state("networkidle", timeout=15000)   # waits for Google Fonts
             page.wait_for_timeout(800)                # extra buffer for font apply
             _draw(page)                               # draw arrows from real positions
             page.wait_for_timeout(150)                # let SVG paint

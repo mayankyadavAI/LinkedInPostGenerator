@@ -38,8 +38,8 @@ LINKEDIN_PERSON_ID    = os.environ.get("LINKEDIN_PERSON_ID")
 
 GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 GEMINI_FALLBACK_MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-flash"]
-MAX_RETRIES            = 4
-RETRY_BASE_SECONDS     = 15
+MAX_RETRIES            = 2
+RETRY_BASE_SECONDS     = 8
 
 # ── Platform character limits ─────────────────────────────────────────────────
 PLATFORM_CHAR_LIMITS = {
