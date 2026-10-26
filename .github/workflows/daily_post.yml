@@ -2,11 +2,7 @@ name: Daily LinkedIn Post
 
 on:
   schedule:
-    # ── Active schedule ────────────────────────────────────────────────────────
-    # - cron: '30 6 * * *'   # 12:00 PM IST — daily post
-
-    # ── Additional slots (uncomment to post multiple times a day) ──────────────
-    - cron: '45 3 * * *'   # 9:15 AM IST  — Breaking AI news / hot take
+    - cron: '30 4 * * *'   # 10:00 AM IST — Breaking AI news / hot take
     - cron: '30 7 * * *'   # 1:00 PM IST  — AI educational post
     - cron: '30 12 * * *'  # 6:00 PM IST  — Personal learning / build-in-public
     - cron: '30 16 * * *'  # 10:00 PM IST — Advanced AI concept
@@ -35,12 +31,13 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -58,17 +55,40 @@ jobs:
             echo "slot=${{ github.event.inputs.content_slot }}" >> $GITHUB_OUTPUT
           else
             case "${{ github.event.schedule }}" in
-              "30 3 * * *")  echo "slot=news"        >> $GITHUB_OUTPUT ;;
-              "30 6 * * *")  echo "slot=educational" >> $GITHUB_OUTPUT ;;
+              "30 4 * * *")  echo "slot=news"        >> $GITHUB_OUTPUT ;;
               "30 7 * * *")  echo "slot=educational" >> $GITHUB_OUTPUT ;;
               "30 12 * * *") echo "slot=personal"    >> $GITHUB_OUTPUT ;;
               "30 16 * * *") echo "slot=advanced"    >> $GITHUB_OUTPUT ;;
-              *)             echo "slot=educational" >> $GITHUB_OUTPUT ;;
+              *)             echo "slot=news"         >> $GITHUB_OUTPUT ;;
             esac
           fi
 
+      - name: Verify required secrets are present
+        run: |
+          missing=""
+          [ -z "$GEMINI_API_KEY" ]        && missing="$missing GEMINI_API_KEY"
+          [ -z "$EXA_API_KEY" ]           && missing="$missing EXA_API_KEY"
+          [ -z "$LINKEDIN_ACCESS_TOKEN" ] && missing="$missing LINKEDIN_ACCESS_TOKEN"
+          [ -z "$LINKEDIN_PERSON_ID" ]    && missing="$missing LINKEDIN_PERSON_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required secrets:$missing"
+            echo "Go to Settings → Secrets and variables → Actions and add them."
+            exit 1
+          fi
+          echo "All required secrets are present."
+        env:
+          GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
+          EXA_API_KEY:           ${{ secrets.EXA_API_KEY }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_ID:    ${{ secrets.LINKEDIN_PERSON_ID }}
+
       - name: Generate and post to LinkedIn
-        run: python scripts/generate_and_schedule.py ${{ github.event.inputs.preview == 'true' && '--preview' || '' }}
+        run: |
+          PREVIEW_FLAG=""
+          if [ "${{ github.event.inputs.preview }}" = "true" ]; then
+            PREVIEW_FLAG="--preview"
+          fi
+          python scripts/generate_and_schedule.py $PREVIEW_FLAG
         env:
           GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2:       ${{ secrets.GEMINI_API_KEY_2 }}
@@ -82,7 +102,7 @@ jobs:
 
       - name: Upload generated infographic
         if: always()
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v4
         with:
           name: infographic-${{ github.run_id }}
           path: renderer/output/*.png
