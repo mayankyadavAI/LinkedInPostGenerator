@@ -3,13 +3,13 @@ name: Daily LinkedIn Post
 on:
   schedule:
     # ── Active schedule ────────────────────────────────────────────────────────
-    #- cron: '30 6 * * *'   # 12:00 PM IST — daily post
+    # - cron: '30 6 * * *'   # 12:00 PM IST — daily post
 
     # ── Additional slots (uncomment to post multiple times a day) ──────────────
-     - cron: '30 3 * * *'   # 9:00 AM IST  — Breaking AI news / hot take
-     - cron: '30 7 * * *'   # 1:00 PM IST  — AI educational post
-     - cron: '30 12 * * *'  # 6:00 PM IST  — Personal learning / build-in-public
-     - cron: '30 16 * * *'  # 10:00 PM IST — Advanced AI concept
+    - cron: '30 3 * * *'   # 9:00 AM IST  — Breaking AI news / hot take
+    - cron: '30 7 * * *'   # 1:00 PM IST  — AI educational post
+    - cron: '30 12 * * *'  # 6:00 PM IST  — Personal learning / build-in-public
+    - cron: '30 16 * * *'  # 10:00 PM IST — Advanced AI concept
   workflow_dispatch:
     inputs:
       content_slot:
