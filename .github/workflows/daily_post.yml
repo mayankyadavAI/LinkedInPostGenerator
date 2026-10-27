@@ -42,9 +42,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Install Playwright Chromium
-        run: python -m playwright install chromium --with-deps
-
       - name: Create infographic output dir
         run: mkdir -p renderer/output
 

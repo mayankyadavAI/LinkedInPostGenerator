@@ -782,46 +782,90 @@ def humanize_post(post_text: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# STEP 2.6 — Generate & render infographic (optional, graceful fallback)
+# STEP 2.6 — Generate infographic directly via Gemini image generation
 # ══════════════════════════════════════════════════════════════════════════════
 
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") == "1"
-# Dark outperforms light in-feed (stands out against LinkedIn's white UI) per current engagement
-# data — set INFOGRAPHIC_THEME=light to switch back without a code change.
-INFOGRAPHIC_THEME = os.environ.get("INFOGRAPHIC_THEME", "dark").strip().lower()
-INFOGRAPHIC_HANDLE = os.environ.get("INFOGRAPHIC_HANDLE", "").strip()
-_INFOGRAPHIC_TEMPLATE = (
-    "process_infographic_dark.html.j2" if INFOGRAPHIC_THEME == "dark" else "process_infographic.html.j2"
-)
 _PNG_PATH = os.path.join(_script_dir, "..", "renderer", "output", "infographic.png")
+
+_INFOGRAPHIC_IMAGE_PROMPT = """
+Create a visually striking dark-themed technical infographic for LinkedIn.
+
+Topic: {topic}
+
+Post content to illustrate (use ONLY these facts, do not invent anything):
+{post_text}
+
+Design requirements:
+- Dark background (#0d0d0d or deep navy)
+- Clean modern sans-serif typography, white and light-grey text
+- Accent colors: violet (#7c3aed), amber (#f59e0b), teal (#10b981)
+- Bold title at the top capturing the core insight in 4-6 words
+- 3-4 clearly separated concept sections with short labels
+- Each section has 2-3 bullet points of concise, plain-English text
+- Use simple flow arrows or numbered steps where the content has a sequence
+- One short takeaway line at the bottom
+- Portrait format roughly 1080 x 1350 pixels
+- Professional and clean — NOT a PowerPoint slide, NOT clipart
+- No watermarks, no logos, no URLs, no borders cutting off the design
+""".strip()
 
 
 def build_infographic(topic: str, post_text: str) -> str | None:
-    """Generate infographic content (grounded in the actual post text) + render PNG using the
-    'how it works' process template, in the configured theme (dark by default). Returns local
-    PNG path, or None on failure."""
+    """Generate infographic PNG directly via Gemini image generation.
+    Returns local PNG path, or None on failure."""
     if not INCLUDE_INFOGRAPHIC:
         return None
 
-    try:
-        import sys as _sys, pathlib as _pl
-        _root = str(_pl.Path(__file__).parent.parent)
-        if _root not in _sys.path:
-            _sys.path.insert(0, _root)
-        import scripts.infographic as ig
-    except ImportError:
-        print("  [infographic] skipped — scripts.infographic not importable.")
-        return None
+    print("[ Step 2.6 ] Generating infographic via Gemini image generation...")
 
-    print(f"[ Step 2.6 ] Generating infographic (synced to post, template: process/how-it-works, theme: {INFOGRAPHIC_THEME})...")
     try:
-        content = ig.generate_process_content(topic, post_text, generate_text)
-        content["infographic_handle"] = INFOGRAPHIC_HANDLE
-        png     = ig.render_infographic(content, _PNG_PATH, template=_INFOGRAPHIC_TEMPLATE)
-        print(f"  Infographic rendered: {png}\n")
-        return png
+        import base64 as _b64
+        import pathlib as _pl
+        from google.genai import types as _types
+
+        client_key = GEMINI_API_KEY or GEMINI_API_KEY_2
+        if not client_key:
+            print("  [infographic] No Gemini API key available — skipping.")
+            return None
+
+        _client = genai.Client(api_key=client_key)
+        prompt = _INFOGRAPHIC_IMAGE_PROMPT.format(
+            topic=topic,
+            post_text=post_text[:1500],
+        )
+
+        response = _client.models.generate_content(
+            model="gemini-2.0-flash-preview-image-generation",
+            contents=prompt,
+            config=_types.GenerateContentConfig(
+                response_modalities=["TEXT", "IMAGE"]
+            ),
+        )
+
+        # Extract image bytes from response parts
+        image_data = None
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                image_data = part.inline_data.data
+                break
+
+        if not image_data:
+            print("  [infographic] Gemini returned no image — posting text-only.\n")
+            return None
+
+        # SDK may return base64 string or raw bytes depending on version
+        image_bytes = _b64.b64decode(image_data) if isinstance(image_data, str) else image_data
+
+        out = _pl.Path(_PNG_PATH)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(image_bytes)
+
+        print(f"  Infographic saved: {_PNG_PATH}\n")
+        return str(out)
+
     except Exception as exc:
-        print(f"  [infographic] WARNING: failed ({exc}) — posting text-only.\n")
+        print(f"  [infographic] WARNING: Gemini image generation failed ({exc}) — posting text-only.\n")
         return None
 
 
