@@ -2,9 +2,17 @@
 Infographic generator for LinkedIn posts.
 
 Pipeline:
-  generate_process_content()  → Gemini → "how it works" content dict
-  render_infographic()        → Playwright → PNG
+  generate_diagram_content()  → Gemini → diagram JSON (type-aware)
+  render_diagram()            → Matplotlib → PNG  (no browser needed)
   upload_to_linkedin()        → LinkedIn media API → asset URN
+
+Gemini picks the diagram type that best fits the post content:
+  flow     — process / how something works (boxes + arrows)
+  split    — comparison / before vs after (two columns)
+  layers   — hierarchy / stack (pyramid or stacked bars)
+  cycle    — loop / repeating process (circular)
+  scale    — tradeoff / spectrum (axis with markers)
+  stats    — numbers / data callouts (large numbers + labels)
 """
 
 import os
@@ -13,152 +21,183 @@ import json
 import pathlib
 import requests
 
-_PROCESS_CONTENT_PROMPT = """
-You are designing content for a professional, visually polished LinkedIn infographic aimed at AI/ML
-engineers and technical practitioners. The infographic must look like it belongs in a high-quality
-engineering publication — precise language, clean structure, zero fluff.
+# ── prompt ────────────────────────────────────────────────────────────────────
 
-Topic: {topic}
+_DIAGRAM_PROMPT = """
+You are designing a diagram for a LinkedIn post. Your job is to pick the diagram
+type that best matches the post's core idea, then fill in the content.
 
-The LinkedIn post this infographic will accompany (the infographic MUST illustrate the SAME narrative —
-same claims, same specifics, no invented facts):
+Post topic : {topic}
+
+Post text (use ONLY facts from here, never invent):
 {post_text}
 
-Read the post and identify its natural 3-part arc. Use the framing that fits the post exactly:
-- Technical mechanism: INPUT → PROCESS → OUTPUT
-- Problem/solution: THE PROBLEM → THE FIX → THE RESULT
-- Comparison/contrast: BEFORE → THE SHIFT → AFTER
-- News/discovery: CONTEXT → THE FINDING → THE IMPLICATION
+── DIAGRAM TYPES ──────────────────────────────────────────────────────────────
 
-This infographic has THREE structured sections, all walking through the same arc at increasing depth:
+Choose exactly ONE from: flow | split | layers | cycle | scale | stats
 
-1. "stages" — exactly 3 items representing the arc at the highest level. Each has:
-   - "label": 2-3 words, Title Case — sharp and specific, not generic ("Token Sampling" not "The Process")
-   - "snippet": a realistic code/terminal/data fragment (max 22 chars) that visually represents the stage.
-     Use actual syntax where possible: 'logits[vocab]', 'p = softmax(z)', 'token = argmax(p)',
-     'loss = NaN', 'ctx_len = 128k', 'status: FAILED'. Even for non-code topics, use a log-line or
-     metric-style fragment — it's a visual device that signals technical credibility.
+flow   — best when the post explains a process, a pipeline, or "how X works"
+         step by step. Example: how a token gets predicted, how RAG retrieves.
 
-2. "steps" — exactly 4 numbered cards that walk through the arc in more detail (step 1 = entry point,
-   step 4 = payoff). Each has:
-   - "label": 2-4 words, Title Case — specific and action-oriented ("Compute Attention Scores",
-     not "Step One")
-   - "points": exactly 3 crisp technical phrases, max 4 words each. These should read like bullet
-     points from an engineering design doc — concrete, no adjective padding, no "enables X" or
-     "leverages Y" filler.
+split  — best when the post compares two things, shows before/after, or
+         contrasts a wrong assumption with the reality.
 
-3. Two flow summaries of the same arc at different granularities:
-   - "flow_a_items": 5-6 items (1-3 words each) — the detailed technical pipeline in order
-   - "flow_b_items": 4 items (1-2 words each) — the simplified big-picture arc
+layers — best when the post describes a stack, hierarchy, or levels of
+         abstraction (e.g. hardware → OS → framework → model).
 
-Also produce these five metadata fields:
-- title_line1: 3-5 words, Title Case. A bold, specific technical claim or contrast — NOT a topic label.
-  ("Closed APIs Cap Control" is better than "Open vs Closed Models"). This is what stops the scroll.
-- title_line2: 3-5 words, Title Case. The payoff that completes line1. Should hit harder than line1,
-  not just continue it ("Open Weights Don't." completes a contrast opener cleanly).
-- tagline: under 10 words. A precise setup line for the breakdown — specific to this topic, not generic.
-  ("From raw logits to a sampled token" beats "How it works step by step").
-- hook: max 20 words. The single most quotable insight from the post — phrased as a standalone
-  declarative sentence that reads well when screenshotted out of context.
-- section_label: 2-4 words, ALL CAPS. Names what this breakdown is specifically about — not a
-  generic placeholder. ("LOGIT CONTROL CHAIN", "THE FALLBACK SEQUENCE", "ATTENTION UNDER THE HOOD").
+cycle  — best when the post describes a loop, feedback cycle, or repeating
+         process (e.g. RLHF feedback loop, agent planning loop).
 
-Standards for all fields:
-- Every label, point, and phrase must be specific to THIS topic — no generic filler that could apply
-  to any infographic ("Key Insight", "Important Step", "The Solution").
-- Technical terms should be used correctly and precisely — do not simplify to the point of inaccuracy.
-- Write for an audience of working engineers, not executives or beginners.
-- Zero marketing language: no "seamless", "robust", "powerful", "unlock", "revolutionize", "leverage".
+scale  — best when the post explains a spectrum, tradeoff, or dial
+         (e.g. temperature low→high, precision vs recall).
 
-Return ONLY valid JSON — no markdown fences, no explanation:
+stats  — best when the post has 3-5 strong numbers or facts that hit harder
+         as large visual callouts than as prose.
+
+── OUTPUT FORMAT ───────────────────────────────────────────────────────────────
+
+Return ONLY valid JSON matching the schema for the type you chose.
+No markdown fences, no explanation, just the JSON object.
+
+─── flow schema ───
 {{
-  "title_line1": "...", "title_line2": "...", "tagline": "...", "hook": "...", "section_label": "...",
-  "stages": [{{"label": "...", "snippet": "..."}}, {{"label": "...", "snippet": "..."}}, {{"label": "...", "snippet": "..."}}],
+  "diagram_type": "flow",
+  "title": "5-8 word title capturing the core insight",
+  "subtitle": "one line setup, under 12 words",
   "steps": [
-    {{"label": "...", "points": ["...", "...", "..."]}},
-    {{"label": "...", "points": ["...", "...", "..."]}},
-    {{"label": "...", "points": ["...", "...", "..."]}},
-    {{"label": "...", "points": ["...", "...", "..."]}}
+    {{"label": "2-4 words", "detail": "one crisp line, plain English"}},
+    {{"label": "2-4 words", "detail": "one crisp line, plain English"}},
+    {{"label": "2-4 words", "detail": "one crisp line, plain English"}},
+    {{"label": "2-4 words", "detail": "one crisp line, plain English"}}
   ],
-  "flow_a_items": ["...", "...", "...", "...", "..."],
-  "flow_b_items": ["...", "...", "...", "..."]
+  "takeaway": "one sentence bottom insight, plain English, under 20 words"
+}}
+
+─── split schema ───
+{{
+  "diagram_type": "split",
+  "title": "5-8 word title",
+  "subtitle": "one line framing the contrast, under 12 words",
+  "left_label": "2-3 words (the wrong side / before / common belief)",
+  "right_label": "2-3 words (the right side / after / reality)",
+  "rows": [
+    {{"left": "short phrase", "right": "short phrase"}},
+    {{"left": "short phrase", "right": "short phrase"}},
+    {{"left": "short phrase", "right": "short phrase"}},
+    {{"left": "short phrase", "right": "short phrase"}}
+  ],
+  "takeaway": "one sentence bottom insight, under 20 words"
+}}
+
+─── layers schema ───
+{{
+  "diagram_type": "layers",
+  "title": "5-8 word title",
+  "subtitle": "one line, under 12 words",
+  "layers": [
+    {{"label": "2-4 words", "detail": "short phrase — top of stack = highest abstraction"}},
+    {{"label": "2-4 words", "detail": "short phrase"}},
+    {{"label": "2-4 words", "detail": "short phrase"}},
+    {{"label": "2-4 words", "detail": "short phrase — bottom = foundation"}}
+  ],
+  "takeaway": "one sentence bottom insight, under 20 words"
+}}
+
+─── cycle schema ───
+{{
+  "diagram_type": "cycle",
+  "title": "5-8 word title",
+  "subtitle": "one line, under 12 words",
+  "steps": [
+    {{"label": "2-4 words", "detail": "short phrase"}},
+    {{"label": "2-4 words", "detail": "short phrase"}},
+    {{"label": "2-4 words", "detail": "short phrase"}},
+    {{"label": "2-4 words", "detail": "short phrase"}}
+  ],
+  "takeaway": "one sentence bottom insight, under 20 words"
+}}
+
+─── scale schema ───
+{{
+  "diagram_type": "scale",
+  "title": "5-8 word title",
+  "subtitle": "one line, under 12 words",
+  "axis_label": "what the axis measures, 3-5 words",
+  "left_pole": "2-3 words (low end of spectrum)",
+  "right_pole": "2-3 words (high end of spectrum)",
+  "markers": [
+    {{"position": 0.1, "label": "2-3 words", "detail": "short phrase"}},
+    {{"position": 0.4, "label": "2-3 words", "detail": "short phrase"}},
+    {{"position": 0.75, "label": "2-3 words", "detail": "short phrase"}}
+  ],
+  "takeaway": "one sentence bottom insight, under 20 words"
+}}
+
+─── stats schema ───
+{{
+  "diagram_type": "stats",
+  "title": "5-8 word title",
+  "subtitle": "one line, under 12 words",
+  "stats": [
+    {{"value": "big number or short fact", "label": "2-4 words", "detail": "short phrase"}},
+    {{"value": "big number or short fact", "label": "2-4 words", "detail": "short phrase"}},
+    {{"value": "big number or short fact", "label": "2-4 words", "detail": "short phrase"}}
+  ],
+  "takeaway": "one sentence bottom insight, under 20 words"
 }}
 """.strip()
 
-_SYSTEM = "You generate structured JSON content for professional technical infographics. Return only valid JSON, no extra text."
+_SYSTEM = (
+    "You pick the right diagram type for a LinkedIn post and output the matching JSON. "
+    "Return only valid JSON, no extra text."
+)
 
 
-def _clean_text(s: str) -> str:
-    """Strip stray markdown/comment markers the model sometimes leaks into 'plain text' fields."""
-    s = s.strip()
-    s = re.sub(r'^(#+|//+)\s*', '', s)
-    s = re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', s)
-    s = re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', s)
-    s = s.replace('`', '')
-    return s.strip()
+# ── content generation ────────────────────────────────────────────────────────
 
-
-def _clean_process_content(data: dict) -> dict:
-    data["title_line1"] = _clean_text(data["title_line1"])
-    data["title_line2"] = _clean_text(data["title_line2"])
-    data["tagline"] = _clean_text(data["tagline"])
-    data["hook"] = _clean_text(data["hook"])
-    data["section_label"] = _clean_text(data.get("section_label", "")).upper() or "HOW IT ACTUALLY WORKS"
-    for stage in data["stages"]:
-        stage["label"] = _clean_text(stage["label"])
-        stage["snippet"] = _clean_text(stage["snippet"])
-    for step in data["steps"]:
-        step["label"] = _clean_text(step["label"])
-        step["points"] = [_clean_text(p) for p in step["points"]]
-    data["flow_a_items"] = [_clean_text(i) for i in data["flow_a_items"]]
-    data["flow_b_items"] = [_clean_text(i) for i in data["flow_b_items"]]
-    return data
-
-
-def generate_process_content(topic: str, post_text: str, generate_text_fn) -> dict:
-    """Call the LLM to produce the 'how it works' process-infographic content dict."""
-    prompt = _PROCESS_CONTENT_PROMPT.format(topic=topic, post_text=post_text[:2500])
+def generate_diagram_content(topic: str, post_text: str, generate_text_fn) -> dict:
+    """Ask Gemini to pick a diagram type and return structured content."""
+    prompt = _DIAGRAM_PROMPT.format(topic=topic, post_text=post_text[:2500])
 
     for attempt in range(2):
-        raw = generate_text_fn(prompt, _SYSTEM)
-        raw = raw.strip()
+        raw = generate_text_fn(prompt, _SYSTEM).strip()
         raw = re.sub(r'^```(?:json)?\s*', '', raw)
         raw = re.sub(r'\s*```$', '', raw)
         raw = raw.strip()
         try:
             data = json.loads(raw)
-            required = ["title_line1", "title_line2", "tagline", "hook",
-                        "stages", "steps", "flow_a_items", "flow_b_items"]
-            if all(k in data for k in required) and len(data["stages"]) == 3 and len(data["steps"]) == 4:
-                return _clean_process_content(data)
-        except (json.JSONDecodeError, KeyError):
-            pass
+            dtype = data.get("diagram_type", "")
+            if dtype in ("flow", "split", "layers", "cycle", "scale", "stats"):
+                return data
+            print(f"  [infographic] attempt {attempt+1}: unknown diagram_type '{dtype}', retrying...")
+        except json.JSONDecodeError as e:
+            print(f"  [infographic] attempt {attempt+1}: JSON parse failed ({e}), retrying...")
 
-    raise RuntimeError("Failed to generate valid process-infographic JSON after 2 attempts.")
+    raise RuntimeError("Failed to generate valid diagram JSON after 2 attempts.")
 
 
-def render_infographic(content: dict, out_path: str, template: str = "process_infographic.html.j2") -> str:
-    """Render the content dict to a PNG using Playwright. Returns PNG path."""
+# ── render dispatch ───────────────────────────────────────────────────────────
+
+def render_diagram(content: dict, out_path: str) -> str:
+    """Render diagram content → PNG using Matplotlib. Returns out_path."""
     import sys
     root = pathlib.Path(__file__).parent.parent
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
-    from renderer.render import render
-    return render(content, out_path, template=template)
+    from renderer.render_matplotlib import render
+    return render(content, out_path)
 
+
+# ── LinkedIn upload (unchanged) ───────────────────────────────────────────────
 
 def upload_to_linkedin(png_path: str, access_token: str, person_id: str) -> str:
-    """
-    Upload PNG to LinkedIn via the media upload API.
-    Returns the asset URN to embed in the ugcPost.
-    """
+    """Upload PNG to LinkedIn media API. Returns asset URN."""
     headers_json = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type":  "application/json",
         "X-Restli-Protocol-Version": "2.0.0",
     }
 
-    # Step 1 — register upload
     reg = requests.post(
         "https://api.linkedin.com/v2/assets?action=registerUpload",
         headers=headers_json,
@@ -181,7 +220,6 @@ def upload_to_linkedin(png_path: str, access_token: str, person_id: str) -> str:
     ]["uploadUrl"]
     asset_urn = val["asset"]
 
-    # Step 2 — upload image bytes
     with open(png_path, "rb") as f:
         img_bytes = f.read()
 

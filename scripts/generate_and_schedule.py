@@ -36,8 +36,8 @@ EXA_API_KEY           = os.environ.get("EXA_API_KEY")
 LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN")
 LINKEDIN_PERSON_ID    = os.environ.get("LINKEDIN_PERSON_ID")
 
-GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
-GEMINI_FALLBACK_MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-flash"]
+GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_FALLBACK_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-flash-latest"]
 MAX_RETRIES            = 2
 RETRY_BASE_SECONDS     = 8
 
@@ -782,90 +782,37 @@ def humanize_post(post_text: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# STEP 2.6 — Generate infographic directly via Gemini image generation
+# STEP 2.6 — Generate diagram via Gemini JSON + Matplotlib render
 # ══════════════════════════════════════════════════════════════════════════════
 
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") == "1"
 _PNG_PATH = os.path.join(_script_dir, "..", "renderer", "output", "infographic.png")
 
-_INFOGRAPHIC_IMAGE_PROMPT = """
-Create a visually striking dark-themed technical infographic for LinkedIn.
-
-Topic: {topic}
-
-Post content to illustrate (use ONLY these facts, do not invent anything):
-{post_text}
-
-Design requirements:
-- Dark background (#0d0d0d or deep navy)
-- Clean modern sans-serif typography, white and light-grey text
-- Accent colors: violet (#7c3aed), amber (#f59e0b), teal (#10b981)
-- Bold title at the top capturing the core insight in 4-6 words
-- 3-4 clearly separated concept sections with short labels
-- Each section has 2-3 bullet points of concise, plain-English text
-- Use simple flow arrows or numbered steps where the content has a sequence
-- One short takeaway line at the bottom
-- Portrait format roughly 1080 x 1350 pixels
-- Professional and clean — NOT a PowerPoint slide, NOT clipart
-- No watermarks, no logos, no URLs, no borders cutting off the design
-""".strip()
-
 
 def build_infographic(topic: str, post_text: str) -> str | None:
-    """Generate infographic PNG directly via Gemini image generation.
+    """Gemini picks the right diagram type + content, Matplotlib renders to PNG.
     Returns local PNG path, or None on failure."""
     if not INCLUDE_INFOGRAPHIC:
         return None
 
-    print("[ Step 2.6 ] Generating infographic via Gemini image generation...")
-
     try:
-        import base64 as _b64
-        import pathlib as _pl
-        from google.genai import types as _types
+        import sys as _sys, pathlib as _pl
+        _root = str(_pl.Path(__file__).parent.parent)
+        if _root not in _sys.path:
+            _sys.path.insert(0, _root)
+        import scripts.infographic as ig
+    except ImportError:
+        print("  [infographic] skipped — scripts.infographic not importable.")
+        return None
 
-        client_key = GEMINI_API_KEY or GEMINI_API_KEY_2
-        if not client_key:
-            print("  [infographic] No Gemini API key available — skipping.")
-            return None
-
-        _client = genai.Client(api_key=client_key)
-        prompt = _INFOGRAPHIC_IMAGE_PROMPT.format(
-            topic=topic,
-            post_text=post_text[:1500],
-        )
-
-        response = _client.models.generate_content(
-            model="gemini-2.0-flash-preview-image-generation",
-            contents=prompt,
-            config=_types.GenerateContentConfig(
-                response_modalities=["TEXT", "IMAGE"]
-            ),
-        )
-
-        # Extract image bytes from response parts
-        image_data = None
-        for part in response.candidates[0].content.parts:
-            if hasattr(part, "inline_data") and part.inline_data:
-                image_data = part.inline_data.data
-                break
-
-        if not image_data:
-            print("  [infographic] Gemini returned no image — posting text-only.\n")
-            return None
-
-        # SDK may return base64 string or raw bytes depending on version
-        image_bytes = _b64.b64decode(image_data) if isinstance(image_data, str) else image_data
-
-        out = _pl.Path(_PNG_PATH)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_bytes(image_bytes)
-
-        print(f"  Infographic saved: {_PNG_PATH}\n")
-        return str(out)
-
+    print("[ Step 2.6 ] Generating diagram (Gemini picks type → Matplotlib renders)...")
+    try:
+        content = ig.generate_diagram_content(topic, post_text, generate_text)
+        png = ig.render_diagram(content, _PNG_PATH)
+        print(f"  Diagram rendered ({content.get('diagram_type','?')}): {png}\n")
+        return png
     except Exception as exc:
-        print(f"  [infographic] WARNING: Gemini image generation failed ({exc}) — posting text-only.\n")
+        print(f"  [infographic] WARNING: failed ({exc}) — posting text-only.\n")
         return None
 
 
