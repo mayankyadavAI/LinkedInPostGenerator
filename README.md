@@ -37,7 +37,7 @@ LinkedIn API — drops a topic-specific engagement comment (the author's own "fi
 | **Exa** | Real-time neural web research |
 | **Google Gemini** | Post generation, humanizing, and infographic content — dual-key with quota rotation, auto-falls-through if a model gets retired |
 | **DeepSeek** | Fallback when all Gemini keys are exhausted |
-| **Playwright + Jinja2** | Renders the infographic (HTML/CSS template → PNG) |
+| **Manim Community Edition** | Renders Gemini-generated Python scenes as infographic PNGs |
 | **LinkedIn UGC API** | Direct publishing of the post, image, and first comment |
 
 ---
@@ -58,6 +58,7 @@ python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python -m playwright install chromium   # needed to render the infographic locally
+manim --version                         # verify Manim Community Edition is installed
 ```
 
 ### 3. Set up your `.env` file
@@ -147,9 +148,10 @@ Every run follows the same six steps (see `scripts/generate_and_schedule.py::mai
    short enough to read in one glance while scrolling, not an essay.
 3. **Humanize** — a second pass strips AI-sounding vocabulary, reveal-bridge phrasing, negative
    parallelism, and manufactured sentence-rhythm tricks, without changing any fact, number, or claim.
-4. **Infographic** — Gemini turns the *same* post into structured "how it works" content (stages,
-   4 numbered steps, a closing hook), rendered to PNG via a Jinja2/Playwright template. Because it's
-   generated from the final post text, it's always in sync with whatever hook/topic that post used.
+4. **Infographic** — Gemini returns the post and a corresponding Manim Community Edition scene in the
+   same response. The pipeline validates the source, runs Manim locally, and renders a PNG for LinkedIn.
+   Generated Python is executable code; the runner applies a syntax-level allowlist and timeout, but
+   this is not a full operating-system sandbox. Review generated scripts before running unattended.
 5. **Post** — publishes the text + infographic directly via the LinkedIn UGC API.
 6. **Engagement comment** — drops a short, topic-specific comment (also model-generated, in the
    author's voice) as the post's first reply, to seed discussion.
@@ -173,10 +175,10 @@ every formula gets exercised evenly over time instead of clustering by chance.
 
 ### Infographics
 
-Two themes live in `renderer/templates/`: `process_infographic_dark.html.j2` (default) and
-`process_infographic.html.j2` (light). Switch with `INFOGRAPHIC_THEME=light` — no code change needed.
-Both share the same layout (3-stage flow, 4 numbered cards, two "flow chip" summaries, a sticky-note
-pull-quote) and the same violet/amber/green/magenta accent system, just recolored for contrast.
+The active pipeline renders the Manim scene returned with each generated post. The earlier Matplotlib
+diagram path remains in `scripts/infographic.py`; its invocation is commented out in the main pipeline.
+Manim Community Edition and its system rendering dependencies must be installed in the local or CI
+environment for infographic generation. Set `INCLUDE_INFOGRAPHIC=0` to skip image rendering.
 
 ---
 
@@ -203,6 +205,11 @@ Edit `scripts/topics.json` to change:
 - **`niche`** — the content category
 - **`persona`** — the voice and style of the posts
 - **`content_slots`** — topics and tones for each time slot
+
+The `business_usecase` slot is available for manual runs and workflow dispatches with
+`CONTENT_SLOT=business_usecase`. It focuses on practical industry workflows, implementation steps,
+security controls, trade-offs, and measurable evaluation. Generated examples must not present hypothetical
+benefits as verified customer outcomes or ROI.
 
 Edit `scripts/hook_matrix.py` to add, remove, or retune hook formulas — each entry has a `best_for`
 list of content slots it's tagged for.

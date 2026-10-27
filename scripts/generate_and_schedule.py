@@ -51,7 +51,7 @@ PLATFORM = "linkedin"  # this pipeline posts to LinkedIn only
 
 # ── Content slot (set by workflow; defaults to 'news') ────────────────────────
 CONTENT_SLOT = os.environ.get("CONTENT_SLOT", "news")
-_VALID_SLOTS = ("news", "educational", "personal", "advanced")
+_VALID_SLOTS = ("news", "educational", "personal", "advanced", "business_usecase")
 if CONTENT_SLOT not in _VALID_SLOTS:
     CONTENT_SLOT = "news"
 
@@ -89,11 +89,11 @@ a whiteboard. Never explain a mechanism the way a textbook or a senior architect
 would ("Think about it:", "Here's how it works:", confident declarative statements about what "the model
 does"). Instead, ground everything in specific things YOU did — I ran, I tested, I read, I debugged, I
 noticed, I got confused by, I re-checked. If you wouldn't say a line out loud to a peer over coffee, cut it.
-STRICTLY OUT OF SCOPE: business news, funding rounds, valuations, stock moves, market share, company
-rivalry/drama, layoffs, IPOs, career/business-advice angles, or anything implying the writer leads a team,
-runs a company, or manages an org's AI strategy. This is one engineer's personal learning journey — never
-a company update, product announcement, or leadership narrative. If a topic drifts toward business or
-leadership framing, redirect it to the underlying technology instead.
+Business applications are in scope when they make the engineering concrete. Use a specific industry
+workflow, explain the system design and implementation choices, and connect them to operational outcomes.
+Do not invent personal work experience, company deployments, customer results, ROI, or metrics. Clearly
+label hypothetical examples and distinguish proposed benefits from measured outcomes. For consequential
+decisions, describe human review and enforceable security/compliance controls.
 """.strip()
 
 STYLE_1_PROMPT = """
@@ -105,6 +105,21 @@ Tone         : {tone}
 
 Research from the web (ground your post in this real, current data):
 {research}
+
+━━━ APPLIED VALUE ━━━
+Build around a real business use case when relevant: name the user/workflow, the problem, the data and
+systems involved, a practical implementation sequence, safeguards, trade-offs, and how success could be
+measured. Explain what a builder would actually implement. Treat unsupported details as an example or
+proposal, never as a proven deployment or result. Keep the post conversational and specific. Use zero
+emoji by default; use at most one only if it adds real meaning. Avoid template-like strings of section
+headings and decorative icons.
+
+Also return executable Manim Community Edition Python source in `manim_code`. It must define exactly one
+`Scene` subclass named `PostInfographic`, use only `from manim import *` and standard math if needed,
+create a readable 16:9 still infographic, and call `self.add(...)` (no animation rendering needed).
+Use concise labels and only claims/details supported by the post. Do not use file, network, shell, OS,
+subprocess, eval, exec, or dynamic imports. The script must be self-contained and runnable with
+`manim -s -ql scene.py PostInfographic`.
 
 ━━━ FORMAT: PROBLEM → SOLUTION ━━━
 Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not a paragraph:
@@ -135,7 +150,7 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX, not 
   as literal characters, not formatting. Use "→" or a plain "-" for any bullet/list line instead.
 - Short, mobile-friendly lines — 1-2 sentences per paragraph, never more. No throat-clearing, no
   restating the same point twice in different words.
-- No business/funding/company content — stay on the technology itself.
+- Business use cases are welcome; focus on technical implementation and operational value, not hype.
 - TARGET LENGTH: up to 3000 characters. Write as much as the topic deserves — cover the hook,
   the core insight, supporting specifics, and a closing line. Do not pad, but do not cut substance
   to hit an arbitrary short target either. Every sentence must earn its place.
@@ -164,6 +179,7 @@ Return ONLY valid JSON — no prose, no markdown fences, no explanation before o
   "image_recommended": <true or false>,
   "image_type": "<infographic|meme|carousel|chart|none>",
   "image_prompt": "<detailed prompt for generating the image, or empty string if none>",
+  "manim_code": "<complete Manim Community Edition Python script defining one Scene class; encode newlines as \\n>",
   "first_comment": "<a short, punchy comment (1-2 sentences) that YOU, the author, would drop as the
     first reply right after posting this — a quick hot take on the topic above, or a direct, specific
     invite for people to share their own experience/opinion in the comments. Plain text, no hashtags,
@@ -181,6 +197,21 @@ Tone         : {tone}
 
 Research from the web (ground your post in this real, current data):
 {research}
+
+━━━ APPLIED VALUE ━━━
+Build around a real business use case when relevant: name the user/workflow, the problem, the data and
+systems involved, a practical implementation sequence, safeguards, trade-offs, and how success could be
+measured. Explain what a builder would actually implement. Treat unsupported details as an example or
+proposal, never as a proven deployment or result. Keep the post conversational and specific. Use zero
+emoji by default; use at most one only if it adds real meaning. Avoid template-like strings of section
+headings and decorative icons.
+
+Also return executable Manim Community Edition Python source in `manim_code`. It must define exactly one
+`Scene` subclass named `PostInfographic`, use only `from manim import *` and standard math if needed,
+create a readable 16:9 still infographic, and call `self.add(...)` (no animation rendering needed).
+Use concise labels and only claims/details supported by the post. Do not use file, network, shell, OS,
+subprocess, eval, exec, or dynamic imports. The script must be self-contained and runnable with
+`manim -s -ql scene.py PostInfographic`.
 
 ━━━ FORMAT: SCENARIO → RISK → SOLUTION ━━━
 Follow this exact structure. Each numbered part is 1-2 short sentences MAX except the bullets in step 5:
@@ -213,7 +244,7 @@ Follow this exact structure. Each numbered part is 1-2 short sentences MAX excep
   as literal characters, not formatting. Use "→" or a plain "-" for any bullet/list line instead.
 - Short, mobile-friendly lines — 1-2 sentences per paragraph, never more. No throat-clearing, no
   restating the same point twice in different words.
-- No business/funding/company content — stay on the technology itself.
+- Business use cases are welcome; focus on technical implementation and operational value, not hype.
 - TARGET LENGTH: up to 3000 characters. Write as much as the topic deserves — cover the hook,
   the core insight, supporting specifics, and a closing line. Do not pad, but do not cut substance
   to hit an arbitrary short target either. Every sentence must earn its place.
@@ -241,6 +272,7 @@ Return ONLY valid JSON — no prose, no markdown fences, no explanation before o
   "image_recommended": <true or false>,
   "image_type": "<infographic|meme|carousel|chart|none>",
   "image_prompt": "<detailed prompt for generating the image, or empty string if none>",
+  "manim_code": "<complete Manim Community Edition Python script defining one Scene class; encode newlines as \\n>",
   "first_comment": "<a short, punchy comment (1-2 sentences) that YOU, the author, would drop as the
     first reply right after posting this — a quick hot take on the topic above, or a direct, specific
     invite for people to share their own experience/opinion in the comments. Plain text, no hashtags,
@@ -455,9 +487,9 @@ def truncate_for_platform(content: str, platform: str = PLATFORM) -> str:
 # STEP 2 — Generate Viral Post with Gemini
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_post(topic: str, tone: str, niche: str, persona: str, research: str) -> tuple[str, str]:
+def generate_post(topic: str, tone: str, niche: str, persona: str, research: str) -> tuple[str, str, str]:
     """Call Gemini with the viral post prompt + research brief, parse JSON response.
-    Returns (post_text, first_comment)."""
+    Returns (post_text, first_comment, manim_code)."""
     import re as _re
     import json as _json
 
@@ -499,6 +531,7 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     hook_score = viral_score = "?"
     image_type = "none"
     image_prompt = ""
+    manim_code = ""
     first_comment = f"Curious how others are handling this — what's your take on {topic.lower()}?"
     try:
         parsed = _json.loads(raw)
@@ -507,6 +540,7 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
         viral_score   = parsed.get("viral_score", "?")
         image_type    = parsed.get("image_type", "none")
         image_prompt  = parsed.get("image_prompt", "")
+        manim_code = parsed.get("manim_code", "")
         first_comment = parsed.get("first_comment", "").strip() or first_comment
     except (_json.JSONDecodeError, KeyError):
         # Model likely emitted an unescaped quote inside post_text, breaking strict JSON.
@@ -572,7 +606,7 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
     print(f"  1st comment: {first_comment}\n")
 
     validate_post_length(post, PLATFORM)
-    return post, first_comment
+    return post, first_comment, manim_code
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -625,6 +659,8 @@ Aggressively remove:
 * Obvious summaries of what was just said
 * Excessive headings
 * Excessive bullet points
+* Unnecessary emoji, decorative emoji bullets, or an emoji before every heading. Prefer plain text; use
+  no emoji by default and at most one when it clearly helps the reader.
 * Artificial transitions
 * Overly polished sentences
 * Needless adjectives and adverbs
@@ -816,6 +852,24 @@ def build_infographic(topic: str, post_text: str) -> str | None:
         return None
 
 
+def build_manim_infographic(manim_code: str) -> str | None:
+    """Render the Manim scene returned alongside the post by Gemini."""
+    if not INCLUDE_INFOGRAPHIC:
+        return None
+    if not manim_code or not manim_code.strip():
+        print("  [manim] Gemini returned no scene code — posting text-only.\n")
+        return None
+    try:
+        import scripts.manim_infographic as manim_renderer
+        print("[ Step 2.6 ] Rendering Gemini's Manim scene locally...")
+        png = manim_renderer.render_manim_source(manim_code, _PNG_PATH)
+        print(f"  Manim infographic rendered: {png}\n")
+        return png
+    except Exception as exc:
+        print(f"  [manim] WARNING: failed ({exc}) — posting text-only.\n")
+        return None
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # STEP 3 — Post directly to LinkedIn
 # ══════════════════════════════════════════════════════════════════════════════
@@ -964,9 +1018,11 @@ def main(preview: bool = False):
 
     try:
         research = research_topic(topic, NICHE)
-        draft, first_comment = generate_post(topic, tone, NICHE, PERSONA, research)
+        draft, first_comment, manim_code = generate_post(topic, tone, NICHE, PERSONA, research)
         post     = humanize_post(draft)
-        png_path = build_infographic(topic, post)
+        # Legacy infographic path retained for reference; use Manim for new runs.
+        # png_path = build_infographic(topic, post)
+        png_path = build_manim_infographic(manim_code)
 
         if preview:
             print(f"  Would comment: {first_comment}\n")

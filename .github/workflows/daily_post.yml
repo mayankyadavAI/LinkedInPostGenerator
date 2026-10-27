@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       content_slot:
-        description: 'Content slot: news | educational | personal | advanced'
+        description: 'Content slot: news | educational | personal | advanced | business_usecase'
         required: false
         default: 'news'
       topic:
@@ -38,6 +38,11 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+
+      - name: Install Manim system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev pkg-config libcairo2-dev libpango1.0-dev
 
       - name: Install dependencies
         run: pip install -r requirements.txt

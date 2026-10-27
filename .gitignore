@@ -5,4 +5,6 @@ __pycache__/
 .DS_Store
 renderer/output/*.png
 renderer/output/_tmp.html
+renderer/output/generated_manim_scene.py
+renderer/output/manim_media/
 .kiro/
