@@ -2,10 +2,11 @@ name: Daily LinkedIn Post
 
 on:
   schedule:
-    - cron: '33 4 * * *'   # 10:03 AM IST — Breaking AI news / hot take
-    - cron: '27 7 * * *'   # 12:57 PM IST — AI educational post
-    - cron: '17 12 * * *'  # 5:47 PM IST  — Personal learning / build-in-public
-    - cron: '43 16 * * *'  # 10:13 PM IST — Advanced AI concept
+    - cron: '33 4 * * *'   # 10:03 AM IST — once daily
+    #- cron: '33 4 * * *'   # 10:03 AM IST — Breaking AI news / hot take
+    #- cron: '27 7 * * *'   # 12:57 PM IST — AI educational post
+    #- cron: '17 12 * * *'  # 5:47 PM IST  — Personal learning / build-in-public
+    #- cron: '43 16 * * *'  # 10:13 PM IST — Advanced AI concept
   workflow_dispatch:
     inputs:
       content_slot:
