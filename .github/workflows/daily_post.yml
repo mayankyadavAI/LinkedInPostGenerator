@@ -2,18 +2,16 @@ name: Daily LinkedIn Post
 
 on:
   schedule:
-    - cron: '33 4 * * *'   # 10:03 AM IST — Breaking AI news / hot take
-    - cron: '27 7 * * *'   # 12:57 PM IST — AI educational post
-    - cron: '17 12 * * *'  # 5:47 PM IST  — Personal learning / build-in-public
-    - cron: '43 16 * * *'  # 10:13 PM IST — Advanced AI concept
+    # Once daily at 10:03 AM IST (4:33 AM UTC) — business use case + AWS architecture diagram
+    - cron: '33 4 * * *'
   workflow_dispatch:
     inputs:
       content_slot:
-        description: 'Content slot: news | educational | personal | advanced | business_usecase'
+        description: 'Content slot: business_usecase | news | educational | personal | advanced'
         required: false
-        default: 'news'
+        default: 'business_usecase'
       topic:
-        description: 'Force an exact topic string (must match one in topics.json) — leave blank for random'
+        description: 'Force an exact topic string — leave blank for dynamic ideation (business_usecase) or random (other slots)'
         required: false
         default: ''
       preview:
@@ -39,15 +37,19 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Manim system dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev pkg-config libcairo2-dev libpango1.0-dev
+          # Graphviz is required by the diagrams library for AWS architecture rendering
+          sudo apt-get install -y graphviz graphviz-dev
+          # Cairo/Pango retained for Matplotlib/Manim fallback
+          sudo apt-get install -y build-essential python3-dev pkg-config \
+            libcairo2-dev libpango1.0-dev
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Create infographic output dir
+      - name: Create output directories
         run: mkdir -p renderer/output
 
       - name: Detect content slot
@@ -56,20 +58,14 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "slot=${{ github.event.inputs.content_slot }}" >> $GITHUB_OUTPUT
           else
-            case "${{ github.event.schedule }}" in
-              "33 4 * * *")  echo "slot=news"        >> $GITHUB_OUTPUT ;;
-              "27 7 * * *")  echo "slot=educational" >> $GITHUB_OUTPUT ;;
-              "17 12 * * *") echo "slot=personal"    >> $GITHUB_OUTPUT ;;
-              "43 16 * * *") echo "slot=advanced"    >> $GITHUB_OUTPUT ;;
-              *)             echo "slot=news"         >> $GITHUB_OUTPUT ;;
-            esac
+            # Scheduled runs always use business_usecase
+            echo "slot=business_usecase" >> $GITHUB_OUTPUT
           fi
 
-      - name: Verify required secrets are present
+      - name: Verify required secrets
         run: |
           missing=""
           [ -z "$GEMINI_API_KEY" ]        && missing="$missing GEMINI_API_KEY"
-          [ -z "$EXA_API_KEY" ]           && missing="$missing EXA_API_KEY"
           [ -z "$LINKEDIN_ACCESS_TOKEN" ] && missing="$missing LINKEDIN_ACCESS_TOKEN"
           [ -z "$LINKEDIN_PERSON_ID" ]    && missing="$missing LINKEDIN_PERSON_ID"
           if [ -n "$missing" ]; then
@@ -77,12 +73,16 @@ jobs:
             echo "Go to Settings → Secrets and variables → Actions and add them."
             exit 1
           fi
-          echo "All required secrets are present."
+          # EXA_API_KEY only required for non-business_usecase slots
+          if [ "${{ steps.slot.outputs.slot }}" != "business_usecase" ]; then
+            [ -z "$EXA_API_KEY" ] && echo "::warning::EXA_API_KEY not set — Exa research will be skipped."
+          fi
+          echo "All required secrets present."
         env:
           GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
-          EXA_API_KEY:           ${{ secrets.EXA_API_KEY }}
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_ID:    ${{ secrets.LINKEDIN_PERSON_ID }}
+          EXA_API_KEY:           ${{ secrets.EXA_API_KEY }}
 
       - name: Generate and post to LinkedIn
         run: |
@@ -102,11 +102,11 @@ jobs:
           INCLUDE_INFOGRAPHIC:    "1"
           TOPIC_OVERRIDE:         ${{ github.event.inputs.topic }}
 
-      - name: Upload generated infographic
+      - name: Upload generated diagram
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: infographic-${{ github.run_id }}
+          name: aws-diagram-${{ github.run_id }}
           path: renderer/output/*.png
           if-no-files-found: ignore
           retention-days: 14

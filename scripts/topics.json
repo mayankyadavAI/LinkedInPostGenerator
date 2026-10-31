@@ -3,7 +3,20 @@
 
   "persona": "A software engineer who studies AI every day and explains it in plain language. I break down confusing AI concepts into things anyone curious about technology can understand. I'm not a founder or a CEO — just someone who reads papers, runs experiments, and shares what I learn. My posts are honest, specific, and grounded in how things actually work — not hype.",
 
+  "business_usecase_persona": "A senior software engineer and solutions architect who has built production AI systems. I write about real business problems, the AWS infrastructure that solves them at scale, and the engineering tradeoffs that matter. I don't hype — I explain what the architecture actually does, why each service was chosen, and what breaks if you get it wrong.",
+
   "content_slots": {
+
+    "business_usecase": {
+      "label": "Production AI business use case with AWS architecture",
+      "description": "Dynamic — topic is invented fresh each run by Gemini based on a random industry and solution type. No fixed topic list needed.",
+      "tones": [
+        "Technical and grounded — explain the architecture decisions, not just the outcome. Name the specific AWS services and why each one was chosen.",
+        "Production-minded — what would actually break at scale, and how the design handles it. Latency, cost, failure modes.",
+        "Business-aware — connect the technical choices to the business metric they improve. Be specific: '40% reduction in manual review time', not 'significant improvement'.",
+        "Practitioner voice — written by someone who has built this, not someone who read about it. Ground claims in specifics."
+      ]
+    },
 
     "news": {
       "label": "New AI release or news, explained simply",
@@ -129,28 +142,6 @@
         "Plain-language technical — precise without being intimidating",
         "Practical insight — what this means if you're building with AI",
         "Honest about tradeoffs — here's what it gains and what it costs"
-      ]
-    },
-
-    "business_usecase": {
-      "label": "Practical AI business use cases and implementation",
-      "topics": [
-        "Build an analyst-assist system for fraud investigations: transaction signals, identity links, evidence retrieval, and human review",
-        "How a hospital could use retrieval-augmented generation to help staff find clinical policy answers with citations and access controls",
-        "Design an AI support assistant that retrieves account context, drafts a response, and leaves sensitive actions to an authorized person",
-        "Use document AI to process insurance claims: extraction, validation, exception queues, and audit trails",
-        "A practical forecasting workflow for retail demand using point-of-sale data, human overrides, and drift monitoring",
-        "How manufacturers can use computer vision for defect triage while keeping uncertain cases in a human review queue",
-        "Build an internal knowledge assistant with permission-aware retrieval, source citations, and freshness checks",
-        "Apply AI to invoice matching: connect ERP records, flag mismatches, and measure review time and error rates",
-        "Design a developer support agent that searches runbooks and proposes fixes without running production commands",
-        "Use AI to prioritize cybersecurity alerts by correlating signals while keeping containment actions approval-gated"
-      ],
-      "tones": [
-        "Practical and specific — explain the workflow, architecture, and first implementation steps",
-        "Grounded — separate measured evidence from expected benefits and avoid invented ROI",
-        "Security-aware — include access controls, auditability, failure modes, and human review",
-        "Builder-focused — name useful metrics and explain how to pilot the system safely"
       ]
     }
 
