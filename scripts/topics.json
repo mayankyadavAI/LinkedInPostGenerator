@@ -8,13 +8,19 @@
   "content_slots": {
 
     "business_usecase": {
-      "label": "Production AI business use case with AWS architecture",
-      "description": "Dynamic — topic is invented fresh each run by Gemini based on a random industry and solution type. No fixed topic list needed.",
+      "label": "Production AI business use case with AWS architecture diagram",
+      "description": "Fully dynamic — Gemini invents a fresh use case each run. Covers multi-agent systems, YC-style AI-native startups, enterprise AI transformations, and AI infrastructure plays. A solution-architect-level AWS diagram is generated alongside every post.",
+      "idea_categories": [
+        "Multi-agent AI systems — specialized LLM agents collaborating (research + reasoning + action, critic/debate patterns, hierarchical orchestration, tool-use pipelines)",
+        "YC-style AI-native startups — niche vertical problems a small team could own (AI for legal ops, medical coding, construction estimation, logistics dispatch, procurement)",
+        "Enterprise AI transformation — Fortune 500 workflows rebuilt with LLMs and ML pipelines (supply chain, risk, compliance, document ops, customer ops)",
+        "AI infrastructure and developer tooling — evaluation frameworks, guardrails, routing, memory systems, LLMOps platforms, agent observability"
+      ],
       "tones": [
-        "Technical and grounded — explain the architecture decisions, not just the outcome. Name the specific AWS services and why each one was chosen.",
-        "Production-minded — what would actually break at scale, and how the design handles it. Latency, cost, failure modes.",
-        "Business-aware — connect the technical choices to the business metric they improve. Be specific: '40% reduction in manual review time', not 'significant improvement'.",
-        "Practitioner voice — written by someone who has built this, not someone who read about it. Ground claims in specifics."
+        "Technical and specific — name the AWS services, agent types, data flows, and why each architectural decision was made over the obvious alternative.",
+        "Production-minded — what breaks at scale, what the latency budget is, what the failure mode looks like, how observability is wired.",
+        "Solution-architect voice — written by someone who would draw this on a whiteboard for a VP of Engineering, not a blog post summarizer.",
+        "Business-grounded — connect architecture choices to measurable outcomes. Specific plausible metrics, not vague value claims."
       ]
     },
 

@@ -10,8 +10,18 @@ on:
         description: 'Content slot: business_usecase | news | educational | personal | advanced'
         required: false
         default: 'business_usecase'
+      idea_category:
+        description: |
+          Idea category for business_usecase slot:
+            multi_agent   — multi-agent AI systems (default for scheduled runs)
+            yc_startup    — YC-style AI-native startup ideas
+            enterprise_ai — Fortune 500 workflow transformations
+            ai_infra      — AI infrastructure and developer tooling
+            random        — Gemini picks freely across all categories
+        required: false
+        default: 'random'
       topic:
-        description: 'Force an exact topic string — leave blank for dynamic ideation (business_usecase) or random (other slots)'
+        description: 'Force an exact topic string — leave blank for dynamic ideation'
         required: false
         default: ''
       preview:
@@ -57,9 +67,11 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "slot=${{ github.event.inputs.content_slot }}" >> $GITHUB_OUTPUT
+            echo "idea_category=${{ github.event.inputs.idea_category }}" >> $GITHUB_OUTPUT
           else
-            # Scheduled runs always use business_usecase
+            # Scheduled runs: always business_usecase, always multi_agent
             echo "slot=business_usecase" >> $GITHUB_OUTPUT
+            echo "idea_category=multi_agent" >> $GITHUB_OUTPUT
           fi
 
       - name: Verify required secrets
@@ -94,11 +106,14 @@ jobs:
         env:
           GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY_2:       ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3:       ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4:       ${{ secrets.GEMINI_API_KEY_4 }}
           DEEPSEEK_API_KEY:       ${{ secrets.DEEPSEEK_API_KEY }}
           EXA_API_KEY:            ${{ secrets.EXA_API_KEY }}
           LINKEDIN_ACCESS_TOKEN:  ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_ID:     ${{ secrets.LINKEDIN_PERSON_ID }}
           CONTENT_SLOT:           ${{ steps.slot.outputs.slot }}
+          IDEA_CATEGORY:          ${{ steps.slot.outputs.idea_category }}
           INCLUDE_INFOGRAPHIC:    "1"
           TOPIC_OVERRIDE:         ${{ github.event.inputs.topic }}
 

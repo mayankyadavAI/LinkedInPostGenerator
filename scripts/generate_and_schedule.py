@@ -55,10 +55,10 @@ EXA_API_KEY           = os.environ.get("EXA_API_KEY")
 LINKEDIN_ACCESS_TOKEN = os.environ.get("LINKEDIN_ACCESS_TOKEN")
 LINKEDIN_PERSON_ID    = os.environ.get("LINKEDIN_PERSON_ID")
 
-GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"]
+GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-flash-latest"]
 MAX_RETRIES            = 2
-RETRY_BASE_SECONDS     = 8
+RETRY_BASE_SECONDS     = 5
 
 # ── Platform character limits ─────────────────────────────────────────────────
 PLATFORM_CHAR_LIMITS = {
@@ -121,8 +121,8 @@ def _is_quota_error(e: Exception) -> bool:
 
 def _is_retryable_server_error(e: Exception) -> bool:
     msg = str(e).lower()
-    return ("503" in msg or "unavailable" in msg or "high demand" in msg
-            or "server disconnected" in msg or "connection reset" in msg
+    return ("503" in msg or "504" in msg or "unavailable" in msg or "high demand" in msg
+            or "deadline" in msg or "server disconnected" in msg or "connection reset" in msg
             or "connection error" in msg or "remotedisconnected" in msg)
 
 
@@ -164,13 +164,15 @@ def _call_deepseek(prompt: str, system_instruction: str) -> str:
 def _gemini_call(prompt: str, system_instruction: str, api_keys: list[str]) -> str:
     """
     Core Gemini call with retry across the given list of API keys.
-    Raises RuntimeError if all keys/models are exhausted.
+    Uses direct httpx (not the genai SDK) to avoid the SDK's internal tenacity
+    retry loop which hangs silently on 503/504 overload.
     """
+    import httpx as _httpx
+
     models_to_try = [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
     last_error = None
 
     for key_index, api_key in enumerate(api_keys):
-        client = genai.Client(api_key=api_key)
         key_label = f"key#{key_index + 1} (...{api_key[-6:]})"
         daily_exhausted = False
         print(f"  [Gemini] Trying {key_label}")
@@ -178,36 +180,72 @@ def _gemini_call(prompt: str, system_instruction: str, api_keys: list[str]) -> s
         for model_id in models_to_try:
             if daily_exhausted:
                 break
-            config = types.GenerateContentConfig(system_instruction=system_instruction)
+
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent"
+            payload = {
+                "system_instruction": {"parts": [{"text": system_instruction}]},
+                "contents": [{"parts": [{"text": prompt}]}],
+            }
+            timeout = _httpx.Timeout(connect=5, read=30, write=10, pool=5)
+
             for attempt in range(1, MAX_RETRIES + 1):
                 try:
-                    response = client.models.generate_content(
-                        model=model_id, contents=prompt, config=config
+                    resp = _httpx.post(
+                        url,
+                        params={"key": api_key},
+                        json=payload,
+                        timeout=timeout,
                     )
-                    print(f"  [Gemini] Success with {model_id} on {key_label}")
-                    return response.text.strip()
-                except Exception as e:
-                    if _is_model_not_found(e):
-                        last_error = e
+
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        print(f"  [Gemini] Success with {model_id} on {key_label}")
+                        return text
+
+                    # Parse error info
+                    try:
+                        err_body = resp.json()
+                        err_msg  = err_body.get("error", {}).get("message", resp.text)
+                        err_code = err_body.get("error", {}).get("code", resp.status_code)
+                    except Exception:
+                        err_msg  = resp.text[:200]
+                        err_code = resp.status_code
+
+                    err_str = f"{resp.status_code} {err_msg}"
+
+                    if resp.status_code == 404:
                         print(f"  [Gemini] {model_id} not found. Trying next model.")
+                        last_error = RuntimeError(err_str)
                         break
-                    if _is_quota_error(e) or _is_retryable_server_error(e):
-                        last_error = e
-                        if _is_daily_quota_exhausted(e):
+
+                    if resp.status_code in (429, 503, 504):
+                        last_error = RuntimeError(err_str)
+                        if resp.status_code == 429 and ("PerDay" in err_msg or "GenerateRequestsPerDay" in err_msg):
                             print(f"  [Gemini] Daily quota on {key_label}. Switching key.")
                             daily_exhausted = True
                             break
-                        is_503 = _is_retryable_server_error(e)
-                        wait = min(RETRY_BASE_SECONDS * attempt, 60) if is_503 else _parse_retry_seconds(e)
-                        kind = "overloaded (503)" if is_503 else "quota (429)"
+                        wait = min(RETRY_BASE_SECONDS * attempt, 30)
+                        kind = {429: "quota (429)", 503: "overloaded (503)", 504: "timeout (504)"}[resp.status_code]
                         print(f"  [Gemini] {kind} on {model_id} ({key_label}), attempt {attempt}/{MAX_RETRIES}. Retrying in {wait}s...")
                         if attempt < MAX_RETRIES:
                             time.sleep(wait)
                         else:
-                            print(f"  [Gemini] Retries exhausted for {model_id}.")
+                            print(f"  [Gemini] Retries exhausted for {model_id}. Trying next.")
                             break
+                        continue
+
+                    # Unexpected HTTP error — don't retry
+                    raise RuntimeError(f"Gemini API unexpected error: {err_str}")
+
+                except (_httpx.TimeoutException, _httpx.ConnectError, _httpx.ReadError) as e:
+                    last_error = e
+                    wait = min(RETRY_BASE_SECONDS * attempt, 30)
+                    print(f"  [Gemini] Network error on {model_id} ({key_label}), attempt {attempt}/{MAX_RETRIES}: {type(e).__name__}. Retrying in {wait}s...")
+                    if attempt < MAX_RETRIES:
+                        time.sleep(wait)
                     else:
-                        raise
+                        print(f"  [Gemini] Network retries exhausted for {model_id}. Trying next.")
 
     raise last_error or RuntimeError("All Gemini keys exhausted.")
 
@@ -225,18 +263,13 @@ def generate_text(prompt: str, system_instruction: str) -> str:
 
 def generate_text_diagram(prompt: str, system_instruction: str) -> str:
     """
-    Diagram spec generation — uses GEMINI_API_KEY_3 + GEMINI_API_KEY_4 first,
-    then falls back to keys 1 & 2 if the dedicated diagram keys are not set.
-    This prevents diagram calls from burning the post-generation quota.
+    Diagram spec generation — skips key#1 (likely near-quota after post+humanize),
+    starts from key#2 then falls back to 3+4.
     """
-    diagram_keys = [k for k in [GEMINI_API_KEY_3, GEMINI_API_KEY_4] if k]
-    fallback_keys = [k for k in [GEMINI_API_KEY, GEMINI_API_KEY_2] if k]
-    keys = diagram_keys if diagram_keys else fallback_keys
-    if not keys:
+    all_keys = [k for k in [GEMINI_API_KEY_2, GEMINI_API_KEY_3, GEMINI_API_KEY_4, GEMINI_API_KEY] if k]
+    if not all_keys:
         raise RuntimeError("No Gemini keys set for diagram generation.")
-    if not diagram_keys:
-        print("  [Gemini] GEMINI_API_KEY_3/4 not set — using post keys for diagram (shared quota).")
-    return _gemini_call(prompt, system_instruction, keys)
+    return _gemini_call(prompt, system_instruction, all_keys)
 
 
 # ==============================================================================
@@ -306,54 +339,58 @@ def _shorten_if_needed(post: str, system_prompt: str) -> str:
 # ==============================================================================
 
 BIZ_POST_SYSTEM = """
-You are ghostwriting LinkedIn posts for a senior software engineer and solutions architect
-who has built production AI systems and writes publicly about technical architecture.
+You are ghostwriting LinkedIn posts for a principal solutions architect and startup
+advisor who builds production AI systems and shares architecture decisions publicly.
 
-Voice: first-person practitioner. Ground every claim in system design specifics — service names,
-data flow, tradeoffs, failure modes. Never claim real client results or measured ROI; use plausible
-estimates and mark them as such. No hype, no generic motivational lines.
+Voice: solution-architect practitioner. You explain WHY each service was chosen over
+the alternative, what breaks at scale, and what the non-obvious design decision is.
+You've drawn this on a whiteboard for a VP of Engineering — write like that.
 
-LENGTH: Keep the post under 1600 characters (roughly 250-280 words). Short, crisp, and dense.
-Every sentence must earn its place. Cut anything that restates what was already said.
+Never claim real client results or measured ROI. Use "a system like this" framing
+with plausible, specific estimates. No hype. No corporate buzzwords.
 
-Platform rules: plain text only. Use "→ " for bullets (never "*" or "-"). No markdown. No emoji
-by default; at most one if it genuinely helps readability.
+LENGTH: Hard limit — 1600 characters (~250 words). Every sentence must earn its place.
+The diagram does the visual heavy lifting; the post provides context and insight.
+
+Platform rules: plain text only. Use "→ " for bullets. No markdown. No emoji by default.
 """.strip()
 
 BIZ_POST_PROMPT = """
 Write a LinkedIn post about this business use case / startup idea.
 
-Use case: {title}
-Industry: {industry}
-Problem : {problem}
-Solution: {solution_summary}
-Business impact (estimate): {business_impact}
-AWS services involved: {aws_services}
-Hook to use as inspiration: {linkedin_hook}
-Tone: {tone}
+Title              : {title}
+Category           : {category}
+Industry           : {industry}
+Problem            : {problem}
+Solution           : {solution_summary}
+Architecture insight: {architecture_insight}
+Business impact    : {business_impact}
+AWS services       : {aws_services}
+Agent types        : {agent_types}
+Hook               : {linkedin_hook}
+Tone               : {tone}
 
-Structure:
-1. Opening hook (< 210 chars before LinkedIn's "see more"). Use the provided hook as inspiration —
-   rewrite it into a crisp, specific observation or number. Never open with a question, command,
-   or "Here's how/why".
-2. The business problem — 2 sentences max, specific to this industry. What breaks today without AI?
-3. The technical solution — name the key AWS services and their roles in one short paragraph.
-   Be specific: why this service over the alternative?
-4. Two or three bullet points (prefixed "→ ") covering the most important of: data flow highlight,
-   scalability concern, or security/compliance consideration.
-5. One closing line — what this architecture pattern means for engineers building similar systems.
-6. 3-5 hashtags on their own line. Specific, searchable, camelCase.
+Structure (short, crisp, SA-level):
+1. Opening hook (< 210 chars). Start with the architectural insight or a specific number.
+   Use the provided hook as inspiration. Never open with a question or command.
+2. The problem — 1-2 sentences. Name the workflow, the cost, why it breaks today.
+3. The architecture — 1 short paragraph. Name the specific AWS services and their roles.
+   Lead with the non-obvious design decision ({architecture_insight}).
+4. Two or three "→ " bullets: one on data flow, one on scale/reliability, one on
+   security or observability (only include if genuinely interesting for this use case).
+5. One closing line — what this pattern means for engineers building similar systems.
+6. 3-5 hashtags on their own line. Specific and searchable.
 
-Writing rules:
-- HARD LIMIT: under 1600 characters total (roughly 250 words). Count carefully. Be concise.
-- No hype ("game-changing", "revolutionary", "transformative").
-- No company name claims or real client results — use "a system like this" framing.
-- Specific numbers are fine if clearly framed as estimates or design targets.
-- No closing question — end with the closing line and hashtags only.
+Rules:
+- HARD LIMIT: under 1600 characters. Count carefully.
+- Name AWS services specifically. No generic "cloud infrastructure" phrases.
+- Agent types (if present): {agent_types} — name them in the architecture paragraph.
+- No hype, no invented client results. Plausible estimates only, framed as such.
+- No closing question.
 
 Output ONLY valid JSON:
 {{
-  "post_text": "full LinkedIn post including hashtags at the end",
+  "post_text": "full LinkedIn post including hashtags",
   "hook_score": <1-10>,
   "viral_score": <1-10>
 }}
@@ -364,11 +401,14 @@ def generate_biz_post(use_case: dict, tone: str) -> str:
     """Generate a LinkedIn post for the given use case. Returns post_text string."""
     prompt = BIZ_POST_PROMPT.format(
         title=use_case.get("title", ""),
+        category=use_case.get("category", ""),
         industry=use_case.get("industry", ""),
         problem=use_case.get("problem", ""),
         solution_summary=use_case.get("solution_summary", ""),
+        architecture_insight=use_case.get("architecture_insight", ""),
         business_impact=use_case.get("business_impact", ""),
         aws_services=", ".join(use_case.get("aws_services", [])),
+        agent_types=", ".join(use_case.get("agent_types", [])) or "N/A",
         linkedin_hook=use_case.get("linkedin_hook", ""),
         tone=tone,
     )
