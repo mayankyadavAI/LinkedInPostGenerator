@@ -45,6 +45,10 @@ load_dotenv()
 # ── API Keys ──────────────────────────────────────────────────────────────────
 GEMINI_API_KEY        = os.environ.get("GEMINI_API_KEY")
 GEMINI_API_KEY_2      = os.environ.get("GEMINI_API_KEY_2")
+# Keys 3 & 4 are reserved exclusively for diagram generation to avoid
+# hitting quota on the post-generation keys during the same run.
+GEMINI_API_KEY_3      = os.environ.get("GEMINI_API_KEY_3")
+GEMINI_API_KEY_4      = os.environ.get("GEMINI_API_KEY_4")
 DEEPSEEK_API_KEY      = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_MODEL        = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 EXA_API_KEY           = os.environ.get("EXA_API_KEY")
@@ -157,9 +161,11 @@ def _call_deepseek(prompt: str, system_instruction: str) -> str:
     raise RuntimeError("DeepSeek failed after 3 attempts.")
 
 
-def generate_text(prompt: str, system_instruction: str) -> str:
-    """Call Gemini with key rotation (key1 -> key2 -> DeepSeek fallback)."""
-    api_keys = [k for k in [GEMINI_API_KEY, GEMINI_API_KEY_2] if k]
+def _gemini_call(prompt: str, system_instruction: str, api_keys: list[str]) -> str:
+    """
+    Core Gemini call with retry across the given list of API keys.
+    Raises RuntimeError if all keys/models are exhausted.
+    """
     models_to_try = [GEMINI_MODEL] + [m for m in GEMINI_FALLBACK_MODELS if m != GEMINI_MODEL]
     last_error = None
 
@@ -203,13 +209,34 @@ def generate_text(prompt: str, system_instruction: str) -> str:
                     else:
                         raise
 
-    if DEEPSEEK_API_KEY:
-        print("  [DeepSeek] All Gemini keys exhausted. Falling back to DeepSeek...")
-        return _call_deepseek(prompt, system_instruction)
+    raise last_error or RuntimeError("All Gemini keys exhausted.")
 
-    raise last_error or RuntimeError(
-        "All Gemini keys exhausted and DEEPSEEK_API_KEY not set."
-    )
+
+def generate_text(prompt: str, system_instruction: str) -> str:
+    """
+    Post/content generation — uses GEMINI_API_KEY + GEMINI_API_KEY_2 only.
+    Keys 3 & 4 are kept free for diagram generation in the same run.
+    """
+    keys = [k for k in [GEMINI_API_KEY, GEMINI_API_KEY_2] if k]
+    if not keys:
+        raise RuntimeError("No Gemini keys set (GEMINI_API_KEY / GEMINI_API_KEY_2).")
+    return _gemini_call(prompt, system_instruction, keys)
+
+
+def generate_text_diagram(prompt: str, system_instruction: str) -> str:
+    """
+    Diagram spec generation — uses GEMINI_API_KEY_3 + GEMINI_API_KEY_4 first,
+    then falls back to keys 1 & 2 if the dedicated diagram keys are not set.
+    This prevents diagram calls from burning the post-generation quota.
+    """
+    diagram_keys = [k for k in [GEMINI_API_KEY_3, GEMINI_API_KEY_4] if k]
+    fallback_keys = [k for k in [GEMINI_API_KEY, GEMINI_API_KEY_2] if k]
+    keys = diagram_keys if diagram_keys else fallback_keys
+    if not keys:
+        raise RuntimeError("No Gemini keys set for diagram generation.")
+    if not diagram_keys:
+        print("  [Gemini] GEMINI_API_KEY_3/4 not set — using post keys for diagram (shared quota).")
+    return _gemini_call(prompt, system_instruction, keys)
 
 
 # ==============================================================================
@@ -286,6 +313,9 @@ Voice: first-person practitioner. Ground every claim in system design specifics 
 data flow, tradeoffs, failure modes. Never claim real client results or measured ROI; use plausible
 estimates and mark them as such. No hype, no generic motivational lines.
 
+LENGTH: Keep the post under 1600 characters (roughly 250-280 words). Short, crisp, and dense.
+Every sentence must earn its place. Cut anything that restates what was already said.
+
 Platform rules: plain text only. Use "→ " for bullets (never "*" or "-"). No markdown. No emoji
 by default; at most one if it genuinely helps readability.
 """.strip()
@@ -306,21 +336,20 @@ Structure:
 1. Opening hook (< 210 chars before LinkedIn's "see more"). Use the provided hook as inspiration —
    rewrite it into a crisp, specific observation or number. Never open with a question, command,
    or "Here's how/why".
-2. The business problem — 2-3 sentences, specific to this industry. What breaks today without AI?
-3. The technical solution — name the AWS services and explain their roles. Be specific: why Kinesis
-   and not SQS? why Step Functions and not Lambda alone?
-4. Three bullet points (prefixed "→ ") covering: data flow / architecture highlight, scalability /
-   production concern, security or compliance consideration.
-5. Closing line — what this architecture pattern means for engineers building similar systems.
+2. The business problem — 2 sentences max, specific to this industry. What breaks today without AI?
+3. The technical solution — name the key AWS services and their roles in one short paragraph.
+   Be specific: why this service over the alternative?
+4. Two or three bullet points (prefixed "→ ") covering the most important of: data flow highlight,
+   scalability concern, or security/compliance consideration.
+5. One closing line — what this architecture pattern means for engineers building similar systems.
 6. 3-5 hashtags on their own line. Specific, searchable, camelCase.
 
 Writing rules:
-- Under 3000 characters total (LinkedIn limit).
+- HARD LIMIT: under 1600 characters total (roughly 250 words). Count carefully. Be concise.
 - No hype ("game-changing", "revolutionary", "transformative").
-- No company name claims or real client results — use "in a production system like this" or
-  "a system like this could...".
+- No company name claims or real client results — use "a system like this" framing.
 - Specific numbers are fine if clearly framed as estimates or design targets.
-- One closing question is optional but must name the specific architecture, not float generically.
+- No closing question — end with the closing line and hashtags only.
 
 Output ONLY valid JSON:
 {{
@@ -447,7 +476,7 @@ def build_aws_diagram(use_case: dict) -> str | None:
 
     print("[ Step 3 ] Generating AWS architecture diagram...")
     try:
-        spec = generate_diagram_spec(use_case, generate_text)
+        spec = generate_diagram_spec(use_case, generate_text_diagram)
         png  = render_diagram(spec, _PNG_PATH)
         print(f"  AWS diagram saved: {png}\n")
         return png
