@@ -9,46 +9,72 @@
   body { width: 1080px; overflow: hidden; }
 
   :root {
-    --paper:    #f8f7f4;
-    --surface:  #ffffff;
-    --surface2: #f2f0ec;
-    --ink:      #111318;
-    --ink2:     #4a4f5c;
-    --ink3:     #9098a9;
-    --blue:     #2563eb;
+    /* Glassmorphism light palette */
+    --bg-from:  #e8eaf6;
+    --bg-to:    #fce4ec;
+    --glass:    rgba(255, 255, 255, 0.55);
+    --glass2:   rgba(255, 255, 255, 0.38);
+    --glass3:   rgba(255, 255, 255, 0.22);
+    --gborder:  rgba(255, 255, 255, 0.80);
+    --gborder2: rgba(255, 255, 255, 0.45);
+    --ink:      #11131e;
+    --ink2:     #3a3f55;
+    --ink3:     #7a82a0;
+    --blue:     #3b6fe8;
     --violet:   #7c3aed;
     --teal:     #0d9488;
     --amber:    #d97706;
     --rose:     #db2777;
-    --border:   #e4e2dc;
-    --mockbg:   #111827;
   }
 
   /* ── page shell ── */
   .page {
     width: 1080px; height: 1410px;
-    background: var(--paper);
+    background: linear-gradient(145deg, var(--bg-from) 0%, #d5d8f5 35%, #f3e6fa 65%, var(--bg-to) 100%);
     position: relative; overflow: hidden;
     font-family: 'Inter', sans-serif;
   }
 
-  /* subtle dot-grid background */
+  /* Blurred blob accents behind content — pure CSS, no image deps */
   .page::before {
     content: '';
-    position: absolute; inset: 0;
-    background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
-    background-size: 32px 32px;
+    position: absolute;
+    top: -160px; left: -120px;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none; z-index: 0;
+  }
+  .page::after {
+    content: '';
+    position: absolute;
+    bottom: -120px; right: -80px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,111,232,0.16) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none; z-index: 0;
+  }
+  /* Extra mid blob */
+  .blob-mid {
+    position: absolute;
+    top: 600px; left: 400px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(13,148,136,0.12) 0%, transparent 70%);
+    filter: blur(55px);
     pointer-events: none; z-index: 0;
   }
 
-  /* top accent bar — thick bold editorial stripe */
+  /* top accent bar */
   .accent-bar {
-    position: absolute; top: 0; left: 0; right: 0; height: 6px; z-index: 2;
+    position: absolute; top: 0; left: 0; right: 0; height: 5px; z-index: 10;
     background: linear-gradient(90deg, var(--blue) 0%, var(--violet) 45%, var(--teal) 100%);
   }
 
   .content {
-    position: absolute; left: 60px; top: 0; right: 60px; bottom: 0; z-index: 1;
+    position: absolute; left: 60px; top: 0; right: 60px; bottom: 0; z-index: 2;
   }
 
   /* ── header row ── */
@@ -58,24 +84,31 @@
   }
   .eyebrow {
     display: inline-flex; align-items: center; gap: 9px;
-    background: var(--surface);
-    border: 2px solid var(--blue);
-    border-radius: 8px; padding: 8px 18px 8px 14px;
-    box-shadow: 3px 3px 0 rgba(37,99,235,0.12);
+    background: var(--glass);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1.5px solid var(--gborder);
+    border-radius: 10px; padding: 8px 18px 8px 14px;
+    box-shadow: 0 4px 16px rgba(59,111,232,0.10), 0 1.5px 4px rgba(0,0,0,0.06);
   }
   .eyebrow-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--blue);
+    box-shadow: 0 0 6px rgba(59,111,232,0.5);
   }
   .eyebrow span {
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
     color: var(--blue); letter-spacing: 1.4px; text-transform: uppercase;
   }
   .corner-tag {
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px;
-    color: var(--surface); background: var(--ink);
-    border-radius: 6px; padding: 7px 14px;
-    letter-spacing: 0.3px;
+    font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 13px;
+    color: var(--ink2);
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid var(--gborder);
+    border-radius: 8px; padding: 7px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
 
   /* ── title block ── */
@@ -105,9 +138,8 @@
 
   /* divider */
   .divider {
-    position: absolute; left: 0; width: 960px; height: 2px;
-    background: linear-gradient(90deg, var(--blue) 0%, var(--violet) 50%, transparent 100%);
-    opacity: 0.2;
+    position: absolute; left: 0; width: 960px; height: 1.5px;
+    background: linear-gradient(90deg, rgba(59,111,232,0.5) 0%, rgba(124,58,237,0.4) 50%, transparent 100%);
   }
 
   /* ── section label ── */
@@ -129,6 +161,7 @@
   .stage-dot {
     width: 7px; height: 7px; border-radius: 50%;
     background: var(--c);
+    box-shadow: 0 0 6px var(--c);
   }
   .stage-label {
     font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12px;
@@ -137,10 +170,17 @@
 
   .mockwin {
     width: 100%; height: 158px;
-    background: var(--mockbg); border-radius: 12px;
+    background: var(--glass);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    border-radius: 14px;
     padding: 14px 16px;
+    border: 1.5px solid var(--gborder);
     border-top: 3px solid var(--c);
-    box-shadow: 4px 6px 0 rgba(0,0,0,0.15), 0 2px 12px rgba(0,0,0,0.1);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.10),
+      0 2px 8px rgba(0,0,0,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.7);
   }
   .mockwin .dots { display: flex; gap: 5px; margin-bottom: 12px; }
   .mockwin .dot { width: 9px; height: 9px; border-radius: 50%; }
@@ -161,26 +201,32 @@
   .stage0 .mockwin { --c: var(--blue); }
   .stage0 .stage-dot { --c: var(--blue); }
   .stage0 .stage-label { --c: var(--blue); }
-  .stage0 .snippet { color: #60a5fa; }
+  .stage0 .snippet { color: var(--blue); }
 
   .stage1 .mockwin { --c: var(--violet); }
   .stage1 .stage-dot { --c: var(--violet); }
   .stage1 .stage-label { --c: var(--violet); }
-  .stage1 .snippet { color: #c4b5fd; }
+  .stage1 .snippet { color: var(--violet); }
 
   .stage2 .mockwin { --c: var(--teal); }
   .stage2 .stage-dot { --c: var(--teal); }
   .stage2 .stage-label { --c: var(--teal); }
-  .stage2 .snippet { color: #5eead4; }
+  .stage2 .snippet { color: var(--teal); }
 
-  /* ── step cards ── */
+  /* ── step cards — frosted glass ── */
   .card {
     position: absolute;
-    background: var(--surface); border-radius: 14px;
-    border: 2px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border-radius: 16px;
+    border: 1.5px solid var(--gborder);
     border-left: 4px solid var(--c);
     padding: 20px 22px 18px 26px;
-    box-shadow: 4px 5px 0 rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.05);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.09),
+      0 2px 8px rgba(0,0,0,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.75);
   }
   .card.c1 { --c: var(--blue); }
   .card.c2 { --c: var(--violet); }
@@ -190,10 +236,15 @@
   .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
   .card-num {
     width: 32px; height: 32px; border-radius: 8px;
-    background: var(--c); color: #fff;
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--c) 22%, rgba(255,255,255,0.6)),
+      color-mix(in srgb, var(--c) 10%, rgba(255,255,255,0.4)));
+    border: 1.5px solid color-mix(in srgb, var(--c) 35%, transparent);
+    backdrop-filter: blur(8px);
     display: flex; align-items: center; justify-content: center;
     font-family: 'JetBrains Mono', monospace; font-weight: 700;
-    font-size: 14px; flex-shrink: 0;
+    font-size: 14px; color: var(--c); flex-shrink: 0;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--c) 20%, transparent);
   }
   .card-title {
     font-family: 'DM Sans', 'Inter', sans-serif; font-weight: 700; font-size: 21px;
@@ -220,38 +271,45 @@
   .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
   .flow-chip {
     font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
-    color: var(--ink);
-    border: 2px solid var(--border);
-    border-radius: 6px; background: var(--surface);
-    padding: 6px 12px; white-space: nowrap;
-    box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
+    color: var(--ink2);
+    background: var(--glass2);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid var(--gborder);
+    border-radius: 8px; padding: 6px 12px; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.6);
   }
   .flow-chevron {
     display: flex; align-items: center; color: var(--ink3);
   }
   .flow-chevron svg { width: 14px; height: 14px; overflow: visible; }
 
-  /* ── insight callout ── */
+  /* ── insight callout — frosted glass ── */
   .callout {
     position: absolute; right: 0; width: 248px;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: 12px;
+    background: var(--glass);
+    backdrop-filter: blur(22px) saturate(1.6);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    border: 1.5px solid var(--gborder);
+    border-radius: 14px;
     padding: 22px 18px 18px 22px;
-    box-shadow: 4px 5px 0 rgba(0,0,0,0.07);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.10),
+      0 2px 8px rgba(0,0,0,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.75);
     overflow: hidden;
   }
   .callout::before {
     content: '';
     position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
     background: linear-gradient(180deg, var(--blue), var(--violet), var(--teal));
-    border-radius: 12px 0 0 12px;
+    border-radius: 14px 0 0 14px;
   }
   .callout::after {
     content: '\201C';
     position: absolute; top: -8px; right: 12px;
     font-family: 'DM Sans', serif; font-size: 80px; font-weight: 900;
-    color: rgba(37,99,235,0.06); line-height: 1;
+    color: rgba(59,111,232,0.08); line-height: 1;
     pointer-events: none;
   }
   .callout-label {
@@ -262,6 +320,7 @@
   .callout-label-dot {
     width: 5px; height: 5px; border-radius: 50%;
     background: var(--violet);
+    box-shadow: 0 0 6px rgba(124,58,237,0.5);
   }
   .callout-text {
     font-family: 'DM Sans', 'Inter', sans-serif; font-style: italic;
@@ -275,7 +334,7 @@
     position: absolute; left: 0; width: 960px;
     display: flex; align-items: center; justify-content: space-between;
     padding-top: 14px;
-    border-top: 2px solid var(--border);
+    border-top: 1.5px solid rgba(255,255,255,0.55);
   }
   .footer-handle {
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px;
@@ -288,14 +347,19 @@
   .footer-badge {
     font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px;
     color: var(--ink2);
-    border: 2px solid var(--border);
-    border-radius: 4px; padding: 3px 8px;
-    letter-spacing: 0.5px;
+    background: var(--glass2);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid var(--gborder);
+    border-radius: 5px; padding: 3px 9px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
   }
 </style>
 </head>
 <body>
 <div class="page">
+  <!-- background blob decorations -->
+  <div class="blob-mid"></div>
+
   <div class="accent-bar"></div>
   <div class="content">
 
@@ -341,7 +405,7 @@
         <div class="stage-label">{{ stages[1].label }}</div>
       </div>
       <div class="mockwin chip">
-        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:#c4b5fd">
+        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--violet)">
           <rect x="8" y="8" width="14" height="14" rx="2"/>
           <line x1="12" y1="2" x2="12" y2="8"/><line x1="18" y1="2" x2="18" y2="8"/>
           <line x1="12" y1="22" x2="12" y2="28"/><line x1="18" y1="22" x2="18" y2="28"/>
@@ -368,8 +432,8 @@
          width="960" height="800">
       <defs>
         <linearGradient id="arr-grad-01" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#2563eb" stop-opacity="0.2"/>
-          <stop offset="60%" stop-color="#2563eb" stop-opacity="0.7"/>
+          <stop offset="0%" stop-color="#3b6fe8" stop-opacity="0.2"/>
+          <stop offset="60%" stop-color="#3b6fe8" stop-opacity="0.7"/>
           <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.9"/>
         </linearGradient>
         <linearGradient id="arr-grad-12" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -415,7 +479,7 @@
           <svg viewBox="0 0 14 14" fill="none">
             <defs>
               <linearGradient id="chev-la-{{ loop.index }}" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.3"/>
+                <stop offset="0%" stop-color="#3b6fe8" stop-opacity="0.3"/>
                 <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.9"/>
               </linearGradient>
             </defs>
