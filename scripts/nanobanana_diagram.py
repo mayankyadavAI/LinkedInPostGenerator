@@ -384,17 +384,25 @@ def generate_nb_diagram(prompt: str, out_path: str) -> str:
                     )
                     return out_path
 
-                except RuntimeError as e:
+                except Exception as e:
                     last_error = e
                     msg = str(e)
 
-                    # Daily quota or model not found — skip to next model/key
-                    if "404" in msg or "NOT_FOUND" in msg.upper() or "PerDay" in msg:
-                        print(f"  [nanobanana] {model} unavailable ({msg[:80]}). Trying next.")
+                    # Model not found or permission denied — skip this model/key combo
+                    if any(sig in msg for sig in ("404", "NOT_FOUND", "not found",
+                                                   "INVALID_ARGUMENT", "not supported",
+                                                   "PERMISSION_DENIED", "403")):
+                        print(f"  [nanobanana] {model} on {key_label} skipped ({msg[:100]}). Trying next.")
                         break
 
-                    # Rate limit — back off and retry
-                    if "429" in msg or "503" in msg:
+                    # Daily quota exhausted — skip to next key entirely
+                    if "PerDay" in msg or ("RESOURCE_EXHAUSTED" in msg and "PerDay" in msg):
+                        print(f"  [nanobanana] Daily quota on {key_label}. Switching key.")
+                        break
+
+                    # Per-minute rate limit — back off and retry same model
+                    if any(sig in msg for sig in ("429", "503", "RESOURCE_EXHAUSTED",
+                                                   "quota", "overloaded")):
                         wait = _RETRY_BASE_SECS * attempt
                         print(
                             f"  [nanobanana] Rate limit on {model} ({key_label}), "
@@ -406,13 +414,8 @@ def generate_nb_diagram(prompt: str, out_path: str) -> str:
                             print(f"  [nanobanana] Retries exhausted for {model}. Trying next.")
                         continue
 
-                    # Other error — skip model
+                    # Any other error — skip this model, try next
                     print(f"  [nanobanana] Error on {model} ({key_label}): {msg[:120]}. Trying next.")
-                    break
-
-                except Exception as e:
-                    last_error = e
-                    print(f"  [nanobanana] Unexpected error: {e}. Trying next.")
                     break
 
     raise RuntimeError(
