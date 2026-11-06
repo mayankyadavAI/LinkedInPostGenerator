@@ -1,0 +1,268 @@
+[
+  {
+    "name": "Harvey AI — Legal Contract Review",
+    "category": "yc_startup",
+    "industry": "legal-tech",
+    "description": "AI platform for law firms and in-house legal teams that reviews, drafts, and negotiates contracts at scale. Replaces hours of paralegal and junior associate time per contract. Backed by OpenAI fund, used at AmLaw 100 firms.",
+    "context": "Harvey raised $100M Series B. The core problem: a mid-size firm reviews 500-2000 contracts/month; each takes 2-4 hours of attorney time. Harvey's multi-agent system extracts clauses, flags risk deviations from a standard playbook, and auto-redlines. The non-obvious technical challenge is maintaining a per-firm 'clause library' that captures negotiation precedents and enforces them consistently across every new contract review."
+  },
+  {
+    "name": "Glean — Enterprise AI Search and Work Assistant",
+    "category": "enterprise_ai",
+    "industry": "enterprise-software",
+    "description": "AI-powered work assistant that connects to 100+ enterprise apps (Salesforce, Slack, Gmail, Drive, Jira) and provides a unified search and Q&A interface. Understands org structure and user context to surface relevant results.",
+    "context": "Glean indexed 800M+ documents for enterprise customers. The technical challenge: building permission-aware semantic search where results are filtered by who the user is, not just what is relevant. Glean uses a two-stage retrieval — sparse BM25 for lexical recall + dense embeddings for semantic recall — then a reranker model trained on click-through signals. Access control enforcement at retrieval time (not index time) is the hardest production problem."
+  },
+  {
+    "name": "Abridge — Clinical Documentation AI for Physicians",
+    "category": "yc_startup",
+    "industry": "healthcare-tech",
+    "description": "AI scribe that listens to doctor-patient conversations and auto-generates clinical notes in EHR-ready format. Deployed across major health systems including UPMC. Reduces physician documentation time by 70%.",
+    "context": "Physicians spend 2+ hours/day on documentation after seeing patients. Abridge streams audio, transcribes, identifies medical entities (diagnoses, medications, procedures), and structures them into SOAP notes delivered to the EHR. The non-obvious challenge: real-time diarization (distinguishing doctor vs patient speech) and mapping spoken language to ICD-10/SNOMED codes accurately enough for billing compliance."
+  },
+  {
+    "name": "Cognition AI (Devin) — Autonomous Software Engineering Agent",
+    "category": "ai_infra",
+    "industry": "developer-tooling",
+    "description": "Fully autonomous AI software engineer that plans, writes, and deploys code across a complete software project. Given a GitHub issue or a feature description, Devin opens a PR with passing tests.",
+    "context": "Devin runs in an isolated sandbox (terminal + browser + IDE) and uses an orchestrator agent to plan tasks, a coding agent to implement, and a testing agent to validate. The core infrastructure challenge: each agent session needs a clean, reproducible dev environment spun up in under 5 seconds. Container-per-session with pre-warmed images is the standard approach. Parallel agent sessions for independent sub-tasks require careful state isolation."
+  },
+  {
+    "name": "Decagon — AI Customer Support Automation for B2B SaaS",
+    "category": "yc_startup",
+    "industry": "customer-ops",
+    "description": "AI agent for B2B SaaS customer support that handles tier-1 and tier-2 tickets end-to-end without human escalation. Connected to the customer's product documentation, knowledge base, and internal APIs.",
+    "context": "B2B SaaS companies pay $8-15 per resolved ticket for human agents. Decagon's agent retrieves from a RAG index of docs and previous tickets, executes actions via API (reset password, provision user, adjust billing), and escalates only when confidence is below a threshold. The non-obvious challenge: keeping the knowledge base current — documentation staleness degrades answer quality faster than any model limitation."
+  },
+  {
+    "name": "Replit Agent — Browser-Based AI Software Builder",
+    "category": "ai_infra",
+    "industry": "developer-tooling",
+    "description": "AI agent embedded in Replit's cloud IDE that plans and builds full-stack applications from a natural language description. Users describe an app; Replit Agent scaffolds, builds, and deploys it.",
+    "context": "Replit runs 10M+ code executions/day. The Agent uses a planner that breaks features into steps, a coder that generates and iterates on code, and a runtime that executes and captures errors to feed back to the coder. The key infra challenge is the feedback loop: agent reads stderr, modifies code, re-executes — all in a containerized sandbox with hard timeout budgets per session."
+  },
+  {
+    "name": "Perplexity — AI Answer Engine with Real-Time Search",
+    "category": "ai_infra",
+    "industry": "search-ai",
+    "description": "AI answer engine that retrieves real-time web content and synthesizes grounded answers with citations. Processes 100M+ queries/month as a search alternative. Combines retrieval and generation in a single latency budget.",
+    "context": "Perplexity's architecture: query → real-time web retrieval → document re-ranking → retrieval-augmented generation → cited answer. The non-obvious engineering challenge: freshness vs quality tradeoff — pages indexed minutes ago may be lower quality than authoritative older sources; the reranker must balance recency with source authority. End-to-end query latency budget is under 3 seconds including web retrieval."
+  },
+  {
+    "name": "Credal.ai — AI Access Control for Enterprise LLMs",
+    "category": "ai_infra",
+    "industry": "enterprise-ai-security",
+    "description": "Data access control layer for enterprise AI: ensures LLM-powered apps only retrieve and surface documents the requesting user is authorized to see — enforced at query time, not at index time.",
+    "context": "Standard RAG deployments have a dangerous gap: the vector index contains all documents, but access controls are checked only when the document is indexed. Credal solves this with per-query, per-user permission checking: retrieval results are filtered against the user's live permissions from Google Workspace, SharePoint, or Confluence before being passed to the LLM. This requires a live permissions cache with TTL-based invalidation."
+  },
+  {
+    "name": "Elicit — AI Research Assistant for Scientists",
+    "category": "yc_startup",
+    "industry": "research-tools",
+    "description": "AI research assistant that searches, summarizes, and extracts data from scientific literature. Used by researchers to conduct literature reviews, extract study parameters, and identify research gaps across 200M+ papers.",
+    "context": "A systematic literature review takes a researcher 2-6 months manually. Elicit automates: semantic search across papers → abstract screening → full-text extraction of study design, sample size, outcomes → synthesis table. The non-obvious challenge: scientific claims require precise attribution — the system must cite the exact paper and page for every extracted claim to be trustworthy in academic contexts. Hallucination on citations is a hard failure mode."
+  },
+  {
+    "name": "Trullion — AI Accounting and Audit Automation",
+    "category": "enterprise_ai",
+    "industry": "fintech-accounting",
+    "description": "AI platform that automates lease accounting (ASC 842), revenue recognition (ASC 606), and audit evidence collection for enterprise finance teams. Reduces month-end close time significantly by processing contracts at scale.",
+    "context": "Enterprise finance teams spend 5-10 days/month on lease and revenue recognition calculations across thousands of contracts. Trullion's pipeline: contract ingestion (PDF/Word) → document intelligence to extract financial terms → rule engine applying accounting standards → journal entry generation → audit trail export. The AI challenge is extracting structured financial data from unstructured contract language reliably enough for external audit."
+  },
+  {
+    "name": "Cleanlab — ML Training Data Quality and Label Error Detection",
+    "category": "ai_infra",
+    "industry": "mlops-data-quality",
+    "description": "Platform that automatically detects and fixes label errors, outliers, and data quality issues in ML training datasets. Used by teams before fine-tuning or training production models to reduce noise in training data.",
+    "context": "15-30% of labels in real-world ML datasets are incorrect. Cleanlab uses confident learning — a statistical technique that identifies label errors using model uncertainty rather than manual review. Integration into the ML training pipeline: dataset → Cleanlab scan → corrected dataset → retrain. The non-obvious value: models trained on cleaned data consistently outperform models with 10x more dirty data."
+  },
+  {
+    "name": "EvenUp — AI Demand Letter Generation for Personal Injury Law",
+    "category": "yc_startup",
+    "industry": "legal-tech-pi",
+    "description": "AI platform that generates demand letters for personal injury cases from medical records and police reports. Reduces the time from case intake to demand letter from 3 weeks to 1 day.",
+    "context": "A personal injury demand letter synthesizes medical bills, treatment history, lost wages, and pain and suffering into a structured legal argument. EvenUp's pipeline: medical record ingestion (PDF, HIPAA-compliant) → document classification → entity extraction (diagnoses, treatment dates, costs) → LLM drafts the narrative argument → attorney review queue. The key challenge: HIPAA compliance throughout the pipeline, with PHI never leaving a compliant boundary."
+  },
+  {
+    "name": "Fieldguide — AI Audit Workflow Automation for Accounting Firms",
+    "category": "yc_startup",
+    "industry": "accounting-audit",
+    "description": "AI-powered workflow platform for audit and advisory firms. Automates evidence collection, workpaper preparation, and quality review for SOC 2, financial audits, and advisory engagements.",
+    "context": "Audit firms spend 40-60% of engagement time on evidence collection and workpaper formatting. Fieldguide's AI extracts data from client-uploaded documents (financial statements, contracts, system exports), maps them to audit program steps, and drafts workpaper narratives. The non-obvious challenge: audit workpapers must be defensible to regulators — AI output requires structured human review workflows with sign-off chains preserved as an immutable audit log."
+  },
+  {
+    "name": "Taktile — AI Decision Automation for Financial Risk",
+    "category": "yc_startup",
+    "industry": "fintech-risk",
+    "description": "No-code platform for building, testing, and deploying ML-powered credit and fraud decision flows. Used by fintechs and banks to automate loan underwriting and transaction risk scoring at scale.",
+    "context": "Building a credit decisioning model requires data scientists, ML engineers, and compliance teams working in sync. Taktile's platform: drag-and-drop decision graph builder → ML model node integration → A/B test runner → compliance audit trail. The non-obvious challenge: financial decisions require explainability for regulatory audit — every decision must have a human-readable reason logged alongside the model score."
+  },
+  {
+    "name": "Norm AI — Regulatory Compliance Monitoring Automation",
+    "category": "yc_startup",
+    "industry": "regtech",
+    "description": "AI platform that continuously monitors regulatory changes (SEC, FDA, FTC, state laws) and maps them to a company's policies and controls. Alerts compliance teams to required updates before enforcement deadlines.",
+    "context": "Large companies have compliance teams of 50-200 people tracking regulatory changes across 100+ jurisdictions. Norm AI ingests regulatory text (Federal Register, SEC bulletins, state agency publications) → LLM extracts requirements → maps to internal policy library → identifies gaps → creates remediation tasks. The non-obvious challenge: regulatory language is ambiguous; the system must distinguish prescriptive requirements from guidance, and flag uncertainty for human review."
+  },
+  {
+    "name": "Writer — Enterprise Generative AI Platform with Guardrails",
+    "category": "enterprise_ai",
+    "industry": "enterprise-content",
+    "description": "Enterprise AI writing platform with built-in brand voice enforcement, compliance rules, and factual grounding. Used by marketing, legal, and support teams to generate on-brand content at scale.",
+    "context": "Enterprises deploying LLMs for content generation face three failure modes: off-brand tone, factual errors, and compliance violations. Writer's architecture: LLM generation → brand voice model check → factual grounding against approved source docs → compliance rule evaluation → human review queue for flagged items. The non-obvious insight: most enterprise value comes from the guardrail and grounding layer, not the generation model itself."
+  },
+  {
+    "name": "Gong — Revenue Intelligence and Sales Coaching AI",
+    "category": "enterprise_ai",
+    "industry": "sales-intelligence",
+    "description": "AI platform that records, transcribes, and analyzes every sales call and email. Surfaces deal risks, coaching insights, and forecast signals for sales leaders in real time.",
+    "context": "Sales leaders have no visibility into what's actually said in calls unless they manually listen to recordings. Gong's pipeline: call recording + email ingestion → transcription → NLP analysis (competitor mentions, objections, pricing discussions, next steps) → deal risk scoring → forecast roll-up. The non-obvious technical challenge: extracting reliable signal from noisy, unstructured conversation data requires models fine-tuned on sales-specific vocabulary, not general-purpose LLMs."
+  },
+  {
+    "name": "Scale AI — RLHF and Training Data Infrastructure",
+    "category": "ai_infra",
+    "industry": "ai-training-data",
+    "description": "Enterprise platform for AI training data: human labeling, RLHF preference collection, model evaluation, and synthetic data generation. Used by every major foundation model lab and enterprise AI team.",
+    "context": "Foundation model training requires billions of human-labeled examples for fine-tuning and RLHF. Scale AI's platform manages: task decomposition → labeler routing by skill and language → quality control (multiple labelers + consensus + model-based QA) → data pipeline delivery. The infrastructure challenge is quality at scale: detecting low-quality labels before they corrupt training, without manually reviewing every label."
+  },
+  {
+    "name": "Poolside — Enterprise Code Generation with Execution Feedback",
+    "category": "ai_infra",
+    "industry": "developer-tooling",
+    "description": "Foundation model for code generation trained on reinforcement learning from execution feedback (RLEF). The model learns from running code output, not just human preference labels. Targeting enterprise software teams.",
+    "context": "Standard code LLMs are trained on next-token prediction on code corpora. Poolside's insight: training on execution outcomes (does the code run and pass tests?) produces models that generate more correct code than RLHF-trained models. The infrastructure challenge: running billions of code execution sandboxes during training requires a distributed ephemeral compute system with fast sandbox boot time and cost-optimized GPU scheduling."
+  },
+  {
+    "name": "Artisan AI — AI Business Development Representative Agent",
+    "category": "yc_startup",
+    "industry": "sales-automation",
+    "description": "AI BDR agent (Ava) that finds prospects, researches them, personalizes outreach, and manages email sequences autonomously. Positioned as a virtual sales team member running 24/7 at a fraction of the cost.",
+    "context": "Hiring a BDR costs $60-100K/year; AI BDRs can run at under $500/month. Ava's agent pipeline: ICP definition → B2B database enrichment (Apollo, LinkedIn, Clearbit) → prospect research (company news, job postings, LinkedIn activity) → personalized email generation → send via existing email infrastructure → reply detection and response handling. The hard part: personalization that reads as human-written, not templated."
+  },
+  {
+    "name": "Hex — AI Data Analysis and Collaborative Notebook Platform",
+    "category": "enterprise_ai",
+    "industry": "data-analytics",
+    "description": "Collaborative data notebook with AI that writes SQL and Python, explains datasets, and auto-generates charts from natural language questions. Used by data teams to accelerate analysis and share results with stakeholders.",
+    "context": "Data analysts spend 30-40% of time writing boilerplate SQL and Python to answer routine business questions. Hex Magic AI connects to the data warehouse schema, understands the data model, generates correct SQL from natural language, executes and visualizes. The non-obvious challenge: generating correct SQL requires the model to understand the specific data model, cardinality, and join logic — this requires schema-aware few-shot examples, not just a generic code generation model."
+  },
+  {
+    "name": "Gretel.ai — Synthetic Data Generation for ML and Privacy",
+    "category": "ai_infra",
+    "industry": "data-privacy-ml",
+    "description": "Platform that generates statistically accurate synthetic versions of sensitive datasets (PII, financial, healthcare) for ML training, testing, and data sharing without exposing real personal data.",
+    "context": "Companies cannot share or use production data containing PII for ML training due to GDPR, HIPAA, and CCPA. Gretel generates synthetic data that preserves statistical properties and correlations of the original while ensuring no real individual can be re-identified. The technical challenge: measuring utility (synthetic data must produce models as accurate as real data) and privacy simultaneously — differential privacy techniques add noise that degrades model quality."
+  },
+  {
+    "name": "Runway ML — AI Video Generation for Creative Teams",
+    "category": "ai_infra",
+    "industry": "creative-tech",
+    "description": "Generative AI video platform for studios and content creators. Users generate, edit, and upscale video using text prompts and reference images. Used by major film studios and advertising agencies for production workflows.",
+    "context": "Video diffusion models require 40-80 GB GPU RAM for inference; latency for a 4-second clip is 15-30 seconds. The core platform challenge is queue management across GPU fleets, model version isolation per workspace, and cost-per-generation tracking. Most users want under 10 seconds; this requires speculative decoding and split-batch inference strategies. Stateful generation sessions (regenerate just the chorus, change the style) require session-level context management."
+  },
+  {
+    "name": "Twelve Labs — Video Understanding AI for Enterprise Search",
+    "category": "ai_infra",
+    "industry": "video-intelligence",
+    "description": "Multimodal video foundation model that understands video content semantically — enabling search, summarization, and Q&A across video libraries without manual tagging or transcription.",
+    "context": "Enterprises (media companies, sports leagues, e-learning platforms) have petabytes of video that is unsearchable without manual tagging. Twelve Labs' Marengo model indexes video by visual, audio, and speech content simultaneously. A search query returns timestamped clips matching the semantic intent. The infrastructure challenge: indexing a 2-hour video takes 2-5 minutes; real-time indexing for live streams requires a different streaming inference architecture separate from batch ingestion."
+  },
+  {
+    "name": "Instabase — Enterprise Document Intelligence Platform",
+    "category": "enterprise_ai",
+    "industry": "document-processing",
+    "description": "AI platform for unstructured document processing: ingests PDFs, scanned forms, and images; extracts structured data; routes to downstream systems. Used in financial services, insurance, and healthcare back-office operations.",
+    "context": "Financial services firms process millions of documents/month (loan applications, insurance claims, KYC forms). Instabase's pipeline: OCR + layout analysis → document classification → entity extraction → validation rules → structured output. The non-obvious challenge: handwritten and low-quality scans require different models than clean PDFs — a routing layer decides which extraction model to use before processing each document."
+  },
+  {
+    "name": "Observe.AI — Contact Center Intelligence and Coaching Platform",
+    "category": "enterprise_ai",
+    "industry": "contact-center",
+    "description": "AI platform that transcribes, analyzes, and coaches customer service interactions in real-time. Surfaces compliance violations, coaching opportunities, and customer sentiment across 100% of calls instead of a 1-2% sample.",
+    "context": "Contact centers QA-sample 1-2% of calls manually. Observe.AI analyzes 100% of calls: real-time transcription → sentiment analysis → compliance checklist detection → automated coaching triggers. The non-obvious technical challenge: real-time analysis of concurrent calls requires processing at the telephony layer — full cloud roundtrip adds 300-500ms latency that degrades live coaching effectiveness."
+  },
+  {
+    "name": "Synthesis AI — Synthetic Training Data for Computer Vision Models",
+    "category": "ai_infra",
+    "industry": "computer-vision-data",
+    "description": "Platform that generates synthetic labeled training data for computer vision models using 3D rendering. Eliminates expensive manual data collection and annotation, especially for rare edge cases.",
+    "context": "Training a production CV model requires millions of labeled images; real-world rare events are underrepresented. Synthesis generates photorealistic scenes with precise labels (segmentation masks, bounding boxes, depth maps) at a fraction of manual annotation cost. The non-obvious challenge: synthetic-to-real domain gap — models trained on synthetic data underperform on real images without domain adaptation. Bridging this gap is harder than the generation itself."
+  },
+  {
+    "name": "Tome — AI Sales Deck and Presentation Generator",
+    "category": "yc_startup",
+    "industry": "sales-enablement",
+    "description": "AI platform that generates sales decks, one-pagers, and presentations from a CRM record, call transcript, or product brief. Sales teams produce personalized pitch decks in minutes instead of hours.",
+    "context": "AEs spend 3-5 hours/week manually building and customizing decks for prospects. Tome connects to Salesforce to pull deal context, uses an LLM to structure the narrative, and a layout engine to render branded slides. The non-obvious challenge: maintaining consistent brand identity (fonts, colors, imagery style) across AI-generated slides while allowing per-deal personalization of every slide's content."
+  },
+  {
+    "name": "Durable — AI Website Builder for Small Businesses",
+    "category": "yc_startup",
+    "industry": "smb-website-builder",
+    "description": "AI that generates a complete business website (copy, images, contact form, SEO) in 30 seconds from a business description. Targets local SMBs with no technical staff or design budget.",
+    "context": "60% of small businesses in the US have no website or an outdated one. Durable's flow: business description → LLM generates site copy and structure → image generation for hero and section images → template rendering → deploy to CDN. The AI challenge is generating copy that sounds local and authentic rather than generic SaaS boilerplate, and images that accurately reflect the business category."
+  },
+  {
+    "name": "Cohere Embed — Multilingual Semantic Search for Enterprise",
+    "category": "ai_infra",
+    "industry": "search-infrastructure",
+    "description": "Enterprise-grade multilingual embedding model and vector search infrastructure. Companies use it to build semantic search across product catalogs, documents, and customer data in 100+ languages simultaneously.",
+    "context": "Global enterprises need semantic search that works equally well in English, Spanish, Mandarin, Arabic, and 100 other languages — standard English-centric models degrade badly on non-English content. The infrastructure challenge: embedding drift — model updates change the vector space, invalidating existing indexes. This requires versioned indexes and online migration pipelines to avoid search degradation during model rollouts."
+  },
+  {
+    "name": "Sift — Real-Time Fraud and Abuse Detection Platform",
+    "category": "enterprise_ai",
+    "industry": "fintech-fraud",
+    "description": "ML platform for real-time fraud and abuse detection: account takeover, payment fraud, content abuse, and promo abuse. Processes 1 trillion events/year across e-commerce, fintech, and marketplace companies.",
+    "context": "Fraud detection requires sub-100ms decisions on transactions arriving at 100K+ events/second. Sift's architecture: event stream ingestion → real-time feature computation (velocity, graph features, behavioral biometrics) → ensemble ML model (gradient boosting + neural network) → risk score returned via API. The key challenge: feature stores must serve both real-time low-latency and batch training workloads with consistent feature definitions."
+  },
+  {
+    "name": "Voxel51 — Computer Vision Dataset Management and Model Evaluation",
+    "category": "ai_infra",
+    "industry": "computer-vision-mlops",
+    "description": "Open-source platform for computer vision dataset management, model evaluation, and active learning. Teams use it to visualize model failures, identify data gaps, and manage annotation workflows in production.",
+    "context": "CV teams building production models face a recurring problem: after deployment, they discover failure modes on specific subpopulations (nighttime images, specific object classes) but have no systematic way to find and fix them in the training data. Voxel51 FiftyOne: dataset visualization → slice analysis → failure mode clustering → annotation pipeline integration → retrain trigger. The key value is making model failure systematic to reproduce and fix."
+  },
+  {
+    "name": "Rad AI — Radiology Report Automation for Health Systems",
+    "category": "yc_startup",
+    "industry": "healthcare-radiology",
+    "description": "AI scribe that auto-drafts radiology reports from DICOM images, letting radiologists review and sign instead of dictating from scratch. Deployed at 300+ radiology groups and health systems.",
+    "context": "Radiologists read 50-80 studies/day and spend 30-40% of time dictating reports. Rad AI's pipeline: DICOM ingestion → image analysis model → finding extraction → structured report template population → draft delivered to radiologist worklist. The non-obvious challenge: different sites use different RIS (Radiology Information Systems) and report templates — the integration layer connecting to each EHR vendor is harder than the AI model itself."
+  },
+  {
+    "name": "LegalZoom AI — Self-Service Legal Document Automation",
+    "category": "enterprise_ai",
+    "industry": "legal-tech",
+    "description": "AI system that auto-generates legal documents (LLCs, wills, contracts, trademarks) from a guided Q&A flow, with a compliance review layer ensuring state-specific legal accuracy.",
+    "context": "LegalZoom handles 1M+ documents/year. The core AI challenge: generating documents that are legally correct across 50 US states with different requirements (e.g. LLC formation requirements vary significantly by state). The architecture uses a rules engine for compliance checks layered on top of LLM-generated document drafts — LLM writes the prose, rules engine validates the mandatory fields and flags state-specific deviations."
+  },
+  {
+    "name": "Pika Labs — AI Short-Form Video Creation for Social Media",
+    "category": "yc_startup",
+    "industry": "social-media-content",
+    "description": "AI video generation platform that creates short-form video clips from images and text prompts. Targets content creators, social media teams, and e-commerce brands producing video content at scale.",
+    "context": "Content teams need 5-20 video clips per week per social account. Manual video production costs $500-2000/clip. Pika's pipeline: reference image/video → diffusion model for motion generation → optional audio sync → render and export. The key infrastructure challenge: generation queue fairness — free tier users cannot block paid users during peak load, requiring priority queue management across GPU clusters with preemption and backfill scheduling."
+  },
+  {
+    "name": "Otter.ai — Meeting Transcription and Action Item Extraction",
+    "category": "enterprise_ai",
+    "industry": "productivity-tools",
+    "description": "Real-time meeting transcription, speaker diarization, and AI-powered meeting summary with action items and follow-up generation. Integrates with Zoom, Teams, and Google Meet for automatic capture.",
+    "context": "Otter processes 1B+ minutes of audio/month. The real-time pipeline: audio stream → ASR model (streaming inference) → speaker diarization → NLP for entity and action item extraction → LLM for meeting summary. The non-obvious challenge is diarization accuracy in multi-speaker meetings with overlapping speech — this is where most transcription products degrade, and it requires a separate diarization model running in parallel with ASR."
+  },
+  {
+    "name": "Anthropic Claude for Enterprise — LLM Policy Enforcement Layer",
+    "category": "enterprise_ai",
+    "industry": "enterprise-ai-governance",
+    "description": "Enterprise AI deployment with centralized policy enforcement: data residency, PII redaction, prompt injection detection, and model access controls applied before every LLM call reaches the model.",
+    "context": "Fortune 500 companies deploying LLMs internally face a consistent challenge: ensuring every LLM call complies with data governance policies (no PII to external models, no competitor data in prompts, regional data residency). The architecture pattern is a guardrail proxy layer (inspection, redaction, policy enforcement) that sits between the application and the LLM API — invisible to the end user, auditable to the compliance team."
+  },
+  {
+    "name": "Flair.ai — AI Product Description Generator for E-Commerce",
+    "category": "yc_startup",
+    "industry": "e-commerce",
+    "description": "AI platform for e-commerce retailers that generates product descriptions, size guides, and SEO-optimized content from product images. Scales content operations 100x compared to manual copywriting workflows.",
+    "context": "Mid-size retailers list 500-5000 new SKUs/month; each needs a title, description, size chart, and 3-5 SEO tags. Manual copywriting is the throughput bottleneck. Flair's pipeline: product image → vision model for attribute extraction (color, material, style, fit) → LLM for description generation → SEO optimization → upload to Shopify/Magento via API. Quality issue: AI descriptions are generic without brand voice; the differentiator is fine-tuning on the retailer's existing high-performing copy."
+  }
+]

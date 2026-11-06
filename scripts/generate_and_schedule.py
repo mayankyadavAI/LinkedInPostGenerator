@@ -6,8 +6,11 @@ LinkedIn Post Agent
 Two independent pipelines, selected by CONTENT_SLOT env var:
 
   business_usecase (DEFAULT):
-    Step 1  Gemini invents a business use case / startup idea (ideation.py)
-    Step 2  Gemini writes a LinkedIn post about it
+    Step 1  Discover a real-world AI SaaS / YC idea (ideation.py)
+            IDEA_SOURCE=exa     → Exa neural search for live startup news  (default)
+            IDEA_SOURCE=seed    → rotate through ideas_seed.json (offline)
+            IDEA_SOURCE=invented → Gemini freely invents a use case (original)
+    Step 2  Gemini writes a LinkedIn post as a solution architect analyzing that idea
     Step 2.5 Humanize pass
     Step 3  Gemini generates AWS diagram spec → diagrams library renders PNG
     Step 4  Upload PNG + post to LinkedIn  (no comment)
@@ -346,6 +349,11 @@ Voice: solution-architect practitioner. You explain WHY each service was chosen 
 the alternative, what breaks at scale, and what the non-obvious design decision is.
 You've drawn this on a whiteboard for a VP of Engineering — write like that.
 
+When the post is based on a REAL company or YC idea, write in the style of an
+independent SA analysis — not as a spokesperson for that company. Use framing like
+"a startup in this space", "this class of system", or "a production deployment like
+this" rather than quoting the company as a client. You are the analyst, not their PR.
+
 Never claim real client results or measured ROI. Use "a system like this" framing
 with plausible, specific estimates. No hype. No corporate buzzwords.
 
@@ -369,10 +377,13 @@ AWS services       : {aws_services}
 Agent types        : {agent_types}
 Hook               : {linkedin_hook}
 Tone               : {tone}
+Source inspiration : {source_company_or_idea}
 
 Structure (short, crisp, SA-level):
 1. Opening hook (< 210 chars). Start with the architectural insight or a specific number.
    Use the provided hook as inspiration. Never open with a question or command.
+   If source_company_or_idea is non-empty, you may reference "this category of system"
+   or "companies like [name]" to anchor the reader — but write as an independent analyst.
 2. The problem — 1-2 sentences. Name the workflow, the cost, why it breaks today.
 3. The architecture — 1 short paragraph. Name the specific AWS services and their roles.
    Lead with the non-obvious design decision ({architecture_insight}).
@@ -411,6 +422,7 @@ def generate_biz_post(use_case: dict, tone: str) -> str:
         agent_types=", ".join(use_case.get("agent_types", [])) or "N/A",
         linkedin_hook=use_case.get("linkedin_hook", ""),
         tone=tone,
+        source_company_or_idea=use_case.get("source_company_or_idea", "") or "N/A",
     )
 
     print("[ Step 2 ] Generating business use case post...")
@@ -839,12 +851,14 @@ def main(preview: bool = False) -> None:
                 sys.path.insert(0, _script_dir)
             from ideation import generate_use_case
 
-            # Step 1: Invent the use case
-            print("[ Step 1 ] Inventing business use case with Gemini...")
+            # Step 1: Discover / invent the use case
+            print("[ Step 1 ] Discovering business use case...")
             use_case = generate_use_case(generate_text)
             print(f"  Title    : {use_case['title']}")
             print(f"  Industry : {use_case['industry']}")
             print(f"  Type     : {use_case['solution_type']}")
+            if use_case.get("source_company_or_idea"):
+                print(f"  Based on : {use_case['source_company_or_idea']}")
             print(f"  Services : {', '.join(use_case['aws_services'])}\n")
 
             # Step 2: Generate the post

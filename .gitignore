@@ -8,3 +8,4 @@ renderer/output/_tmp.html
 renderer/output/generated_manim_scene.py
 renderer/output/manim_media/
 .kiro/
+.agents/
