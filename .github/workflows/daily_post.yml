@@ -115,13 +115,14 @@ jobs:
           CONTENT_SLOT:           ${{ steps.slot.outputs.slot }}
           IDEA_CATEGORY:          ${{ steps.slot.outputs.idea_category }}
           INCLUDE_INFOGRAPHIC:    "1"
+          DIAGRAM_ENGINE:         "nanobanana"
           TOPIC_OVERRIDE:         ${{ github.event.inputs.topic }}
 
       - name: Upload generated diagram
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aws-diagram-${{ github.run_id }}
+          name: nanobanana-diagram-${{ github.run_id }}
           path: renderer/output/*.png
           if-no-files-found: ignore
           retention-days: 14

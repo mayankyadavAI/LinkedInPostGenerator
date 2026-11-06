@@ -537,6 +537,57 @@ def build_aws_diagram(use_case: dict) -> str | None:
         return None
 
 
+def build_nanobanana_diagram(use_case: dict) -> str | None:
+    """
+    Generate a premium dark-mode infographic using Gemini image generation
+    (NanoBanana models: gemini-3-pro-image-preview / gemini-2.5-flash-image).
+
+    Returns PNG path or None on failure (pipeline continues text-only).
+    """
+    if not INCLUDE_INFOGRAPHIC:
+        return None
+
+    try:
+        import sys as _sys, pathlib as _pl
+        _scripts = str(_pl.Path(__file__).parent)
+        if _scripts not in _sys.path:
+            _sys.path.insert(0, _scripts)
+        from nanobanana_diagram import build_nb_diagram
+    except ImportError as ie:
+        print(f"  [nanobanana] skipped — import error: {ie}")
+        return None
+
+    print("[ Step 3 ] Generating NanoBanana architecture infographic...")
+    return build_nb_diagram(use_case, _PNG_PATH)
+
+
+def build_diagram(use_case: dict) -> str | None:
+    """
+    Dispatch to the correct diagram engine based on DIAGRAM_ENGINE env var.
+
+      DIAGRAM_ENGINE=nanobanana  → Gemini image-gen (premium dark-mode visuals)
+      DIAGRAM_ENGINE=aws         → diagrams library + Graphviz (default)
+      DIAGRAM_ENGINE=off         → skip diagram entirely
+
+    Falls back to aws if the selected engine fails.
+    """
+    engine = os.environ.get("DIAGRAM_ENGINE", "nanobanana").lower().strip()
+
+    if engine == "off":
+        return None
+
+    if engine == "nanobanana":
+        png = build_nanobanana_diagram(use_case)
+        if png:
+            return png
+        # Transparent fallback to the Graphviz renderer
+        print("  [nanobanana] Falling back to aws_diagram renderer...")
+        return build_aws_diagram(use_case)
+
+    # engine == "aws" or anything else
+    return build_aws_diagram(use_case)
+
+
 # ==============================================================================
 # LEGACY PIPELINE HELPERS  (news / educational / personal / advanced)
 # ==============================================================================
@@ -868,8 +919,8 @@ def main(preview: bool = False) -> None:
             # Step 2.5: Humanize
             post = humanize_post(draft)
 
-            # Step 3: AWS diagram
-            png_path  = build_aws_diagram(use_case)
+            # Step 3: Architecture diagram (NanoBanana by default, aws as fallback)
+            png_path  = build_diagram(use_case)
             image_urn = upload_image_to_linkedin(png_path) if not preview else None
 
             if preview:
