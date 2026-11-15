@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1080px; overflow: hidden; background: #ffffff; }
+
+  :root {
+    --bg-page:      #f8fafc;
+    --surface-card: #ffffff;
+    --surface-subtle: #f1f5f9;
+    --surface-hover: #e2e8f0;
+    --border-card:  #e2e8f0;
+    --border-strong: #cbd5e1;
+    
+    --ink-primary:   #0f172a;
+    --ink-secondary: #475569;
+    --ink-muted:     #64748b;
+    --ink-faint:     #94a3b8;
+
+    --brand-blue:    #1d4ed8;
+    --brand-blue-bg: #eff6ff;
+    --brand-blue-bd: #bfdbfe;
+
+    --brand-emerald:    #059669;
+    --brand-emerald-bg: #ecfdf5;
+    --brand-emerald-bd: #a7f3d0;
+
+    --brand-amber:    #d97706;
+    --brand-amber-bg: #fffbeb;
+    --brand-amber-bd: #fde68a;
+
+    --brand-rose:    #e11d48;
+    --brand-rose-bg: #fff1f2;
+    --brand-rose-bd: #fecdd3;
+
+    --brand-violet:    #6d28d9;
+    --brand-violet-bg: #f5f3ff;
+    --brand-violet-bd: #ddd6fe;
+
+    --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  }
+
+  /* ── Canvas Shell (1080 × 1350 standard 4:5 vertical) ── */
+  .canvas {
+    width: 1080px;
+    min-height: 1350px;
+    height: 1350px;
+    background: var(--bg-page);
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 56px 64px 44px 64px;
+  }
+
+  /* Clean engineering grid background (subtle light gray) */
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    background-size: 36px 36px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Top accent rule */
+  .top-rule {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--brand-blue) 0%, var(--brand-violet) 50%, var(--brand-emerald) 100%);
+    z-index: 2;
+  }
+
+  .content-layer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+  }
+
+  /* ── Header Section ── */
+  .header-block {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .meta-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topic-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-card);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand-blue);
+  }
+
+  .pill-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .layout-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-faint);
+  }
+
+  .title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .main-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 46px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: var(--ink-primary);
+  }
+
+  .subtitle {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ink-secondary);
+    max-width: 900px;
+  }
+
+  /* ── Middle Visual Workspace (Dynamic per diagram_type) ── */
+  .visual-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 12px 0 20px 0;
+  }
+
+  /* =========================================================================
+     LAYOUT ARCHETYPE 1: FLOW (Sequential Pipeline / Multi-Agent Flow)
+     ========================================================================= */
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .flow-step-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    position: relative;
+  }
+
+  .flow-step-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--brand-blue);
+  }
+
+  .flow-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand-blue);
+    background: var(--brand-blue-bg);
+    border: 1px solid var(--brand-blue-bd);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .flow-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .flow-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink-primary);
+  }
+
+  .flow-detail {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink-secondary);
+    line-height: 1.5;
+  }
+
+  .flow-subpoints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .flow-subchip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-muted);
+    background: var(--surface-subtle);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-card);
+  }
+
+  .flow-arrow-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 14px;
+    color: var(--ink-faint);
+  }
+
+  .flow-arrow-row svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* =========================================================================
+     LAYOUT ARCHETYPE 2: SPLIT (Comparison: Naive vs Production Architecture)
+     ========================================================================= */
+  .split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  .split-column {
+    background: var(--surface-card);
+    border-radius: 16px;
+    border: 1px solid var(--border-card);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .split-col-header {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-card);
+  }
+
+  .split-col-title {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .split-col-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+  }
+
+  .split-left {
+    border-top: 4px solid var(--brand-rose);
+  }
+  .split-left .split-col-title { color: var(--brand-rose); }
+  .split-left .split-col-tag {
+    background: var(--brand-rose-bg);
+    color: var(--brand-rose);
+    border: 1px solid var(--brand-rose-bd);
+  }
+
+  .split-right {
+    border-top: 4px solid var(--brand-emerald);
+  }
+  .split-right .split-col-title { color: var(--brand-emerald); }
+  .split-right .split-col-tag {
+    background: var(--brand-emerald-bg);
+    color: var(--brand-emerald);
+    border: 1px solid var(--brand-emerald-bd);
+  }
+
+  .split-list {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .split-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .split-item-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .split-left .split-item-icon {
+    background: var(--brand-rose-bg);
+    color: var(--brand-rose);
+    border: 1px solid var(--brand-rose-bd);
+  }
+
+  .split-right .split-item-icon {
+    background: var(--brand-emerald-bg);
+    color: var(--brand-emerald);
+    border: 1px solid var(--brand-emerald-bd);
+  }
+
+  .split-item-text {
+    color: var(--ink-primary);
+    font-weight: 500;
+  }
+
+  /* =========================================================================
+     LAYOUT ARCHETYPE 3: LAYERS (Architectural Tiers / Cognitive Stack)
+     ========================================================================= */
+  .layers-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .layer-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .layer-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: 340px;
+    flex-shrink: 0;
+  }
+
+  .layer-tier-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-violet);
+    background: var(--brand-violet-bg);
+    border: 1px solid var(--brand-violet-bd);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .layer-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink-primary);
+  }
+
+  .layer-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--ink-secondary);
+    line-height: 1.5;
+  }
+
+  /* =========================================================================
+     LAYOUT ARCHETYPE 4: CYCLE (Feedback / Deliberation / Agentic Loop)
+     ========================================================================= */
+  .cycle-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    position: relative;
+  }
+
+  .cycle-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-card);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cycle-step-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .cycle-step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand-blue);
+    background: var(--brand-blue-bg);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--brand-blue-bd);
+  }
+
+  .cycle-step-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink-primary);
+  }
+
+  .cycle-step-detail {
+    font-size: 16px;
+    color: var(--ink-secondary);
+    line-height: 1.5;
+  }
+
+  /* Center badge for cycle */
+  .cycle-center-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--ink-primary);
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    box-shadow: var(--shadow-md);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    z-index: 3;
+  }
+
+  /* =========================================================================
+     LAYOUT ARCHETYPE 5: BREAKDOWN / CHECKLIST (System Autopsy / 3 Key Points)
+     ========================================================================= */
+  .breakdown-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .breakdown-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-card);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 20px;
+  }
+
+  .breakdown-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--brand-amber-bg);
+    border: 1px solid var(--brand-amber-bd);
+    color: var(--brand-amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .breakdown-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .breakdown-heading {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink-primary);
+  }
+
+  .breakdown-desc {
+    font-size: 16px;
+    color: var(--ink-secondary);
+    line-height: 1.5;
+  }
+
+  .breakdown-fix {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    color: var(--brand-emerald);
+    background: var(--brand-emerald-bg);
+    border: 1px solid var(--brand-emerald-bd);
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+
+  /* ── Key Takeaway Footer Callout ── */
+  .takeaway-bar {
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    border-left: 5px solid var(--brand-blue);
+    border-radius: 12px;
+    padding: 18px 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 12px;
+  }
+
+  .takeaway-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-blue);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .takeaway-text {
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--ink-primary);
+    line-height: 1.45;
+  }
+
+  /* ── Footer ── */
+  .footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-card);
+    margin-top: 12px;
+  }
+
+  .footer-author {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink-primary);
+  }
+
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <div class="top-rule"></div>
+
+  <div class="content-layer">
+    <!-- Header Block -->
+    <div class="header-block">
+      <div class="meta-badge-row">
+        <div class="topic-pill">
+          <div class="pill-dot"></div>
+          <span class="pill-text">{{ category if category else "AI Systems Engineering" }}</span>
+        </div>
+        <div class="layout-tag">{{ diagram_type | upper }} PATTERN</div>
+      </div>
+
+      <div class="title-group">
+        <h1 class="main-title">{{ title }}</h1>
+        {% if subtitle %}
+        <p class="subtitle">{{ subtitle }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Main Visual Workspace (Conditioned on diagram_type) -->
+    <div class="visual-workspace">
+
+      {# ── TYPE 1: FLOW ── #}
+      {% if diagram_type == "flow" %}
+      <div class="flow-container">
+        {% for step in steps %}
+        <div class="flow-step-card">
+          <div class="flow-num">{{ "%02d" % loop.index }}</div>
+          <div class="flow-body">
+            <div class="flow-title">{{ step.label }}</div>
+            <div class="flow-detail">{{ step.detail }}</div>
+            {% if step.tags %}
+            <div class="flow-subpoints">
+              {% for tag in step.tags %}
+              <span class="flow-subchip">{{ tag }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% if not loop.last %}
+        <div class="flow-arrow-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      {# ── TYPE 2: SPLIT (Comparison) ── #}
+      {% elif diagram_type == "split" %}
+      <div class="split-container">
+        <!-- Left Side: Naive / Anti-pattern -->
+        <div class="split-column split-left">
+          <div class="split-col-header">
+            <div class="split-col-title">{{ left_label if left_label else "Naive Approach" }}</div>
+            <div class="split-col-tag">Fragile</div>
+          </div>
+          <div class="split-list">
+            {% for row in rows %}
+            <div class="split-item">
+              <div class="split-item-icon">✕</div>
+              <div class="split-item-text">{{ row.left }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Right Side: Production Pattern -->
+        <div class="split-column split-right">
+          <div class="split-col-header">
+            <div class="split-col-title">{{ right_label if right_label else "Production Reality" }}</div>
+            <div class="split-col-tag">Robust</div>
+          </div>
+          <div class="split-list">
+            {% for row in rows %}
+            <div class="split-item">
+              <div class="split-item-icon">✓</div>
+              <div class="split-item-text">{{ row.right }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {# ── TYPE 3: LAYERS (Architectural Tiers) ── #}
+      {% elif diagram_type == "layers" %}
+      <div class="layers-container">
+        {% for layer in layers %}
+        <div class="layer-card">
+          <div class="layer-left">
+            <span class="layer-tier-badge">Tier {{ loop.index }}</span>
+            <span class="layer-name">{{ layer.label }}</span>
+          </div>
+          <div class="layer-content">{{ layer.detail }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {# ── TYPE 4: CYCLE (Feedback / Deliberation Loop) ── #}
+      {% elif diagram_type == "cycle" %}
+      <div class="cycle-container">
+        <div class="cycle-center-badge">Continuous Loop</div>
+        {% for step in steps %}
+        <div class="cycle-card">
+          <div class="cycle-step-header">
+            <span class="cycle-step-num">Step {{ loop.index }}</span>
+          </div>
+          <div class="cycle-step-title">{{ step.label }}</div>
+          <div class="cycle-step-detail">{{ step.detail }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {# ── TYPE 5: BREAKDOWN / STATS (Checklist / Autopsy) ── #}
+      {% else %}
+      <div class="breakdown-container">
+        {% set items = breakdown_items if breakdown_items else steps %}
+        {% for item in items %}
+        <div class="breakdown-card">
+          <div class="breakdown-icon-box">{{ loop.index }}</div>
+          <div class="breakdown-info">
+            <div class="breakdown-heading">{{ item.label }}</div>
+            <div class="breakdown-desc">{{ item.detail }}</div>
+            {% if item.fix %}
+            <div><span class="breakdown-fix">Fix: {{ item.fix }}</span></div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Takeaway Bar -->
+    {% if takeaway %}
+    <div class="takeaway-bar">
+      <div class="takeaway-label">Key Takeaway</div>
+      <div class="takeaway-text">{{ takeaway }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Footer Row -->
+    <div class="footer-row">
+      <div class="footer-author">AI/ML Engineering Architecture</div>
+      <div class="footer-meta">Principal Engineer Insights</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

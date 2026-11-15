@@ -34,25 +34,19 @@ Post text (use ONLY facts from here, never invent):
 
 ── DIAGRAM TYPES ──────────────────────────────────────────────────────────────
 
-Choose exactly ONE from: flow | split | layers | cycle | scale | stats
+Choose exactly ONE from: flow | split | layers | cycle | breakdown | stats
 
-flow   — best when the post explains a process, a pipeline, or "how X works"
-         step by step. Example: how a token gets predicted, how RAG retrieves.
-
-split  — best when the post compares two things, shows before/after, or
-         contrasts a wrong assumption with the reality.
-
-layers — best when the post describes a stack, hierarchy, or levels of
-         abstraction (e.g. hardware → OS → framework → model).
-
-cycle  — best when the post describes a loop, feedback cycle, or repeating
-         process (e.g. RLHF feedback loop, agent planning loop).
-
-scale  — best when the post explains a spectrum, tradeoff, or dial
-         (e.g. temperature low→high, precision vs recall).
-
-stats  — best when the post has 3-5 strong numbers or facts that hit harder
-         as large visual callouts than as prose.
+flow      — best when explaining a sequential pipeline, multi-agent tool execution,
+            or step-by-step process.
+split     — best when comparing two paradigms: Naive Approach vs Production Architecture,
+            single prompt vs orchestrated agent, before vs after.
+layers    — best when describing an architecture stack or cognitive hierarchy
+            (e.g., Planning → Tool Use → Memory → Guardrails).
+cycle     — best when describing a feedback loop, self-refinement cycle,
+            or agentic deliberation / retry loop.
+breakdown — best when analyzing 3-4 key failure points, latency killers,
+            or specific architectural mechanisms with concrete fixes.
+stats     — best when the post centers on 3-4 impactful numbers or benchmark metrics.
 
 ── OUTPUT FORMAT ───────────────────────────────────────────────────────────────
 
@@ -133,6 +127,20 @@ No markdown fences, no explanation, just the JSON object.
   "takeaway": "one sentence bottom insight, under 20 words"
 }}
 
+─── breakdown schema ───
+{{
+  "diagram_type": "breakdown",
+  "title": "5-8 word title",
+  "subtitle": "one line, under 12 words",
+  "category": "e.g. Multi-Agent Systems or LLMOps",
+  "breakdown_items": [
+    {{"label": "2-4 words", "detail": "crisp explanation of what breaks or why it matters", "fix": "concrete architectural mitigation"}},
+    {{"label": "2-4 words", "detail": "crisp explanation of what breaks or why it matters", "fix": "concrete architectural mitigation"}},
+    {{"label": "2-4 words", "detail": "crisp explanation of what breaks or why it matters", "fix": "concrete architectural mitigation"}}
+  ],
+  "takeaway": "one sentence bottom insight, under 20 words"
+}}
+
 ─── stats schema ───
 {{
   "diagram_type": "stats",
@@ -167,7 +175,7 @@ def generate_diagram_content(topic: str, post_text: str, generate_text_fn) -> di
         try:
             data = json.loads(raw)
             dtype = data.get("diagram_type", "")
-            if dtype in ("flow", "split", "layers", "cycle", "scale", "stats"):
+            if dtype in ("flow", "split", "layers", "cycle", "breakdown", "scale", "stats"):
                 return data
             print(f"  [infographic] attempt {attempt+1}: unknown diagram_type '{dtype}', retrying...")
         except json.JSONDecodeError as e:
@@ -179,13 +187,22 @@ def generate_diagram_content(topic: str, post_text: str, generate_text_fn) -> di
 # ── render dispatch ───────────────────────────────────────────────────────────
 
 def render_diagram(content: dict, out_path: str) -> str:
-    """Render diagram content → PNG using Matplotlib. Returns out_path."""
+    """
+    Render diagram content → PNG using high-DPI Playwright HTML renderer
+    with light-mode Swiss architecture templates. Falls back to Matplotlib if needed.
+    """
     import sys
     root = pathlib.Path(__file__).parent.parent
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
-    from renderer.render_matplotlib import render
-    return render(content, out_path)
+
+    try:
+        from renderer.render import render as render_html
+        return render_html(content, out_path, template="infographic_light.html.j2")
+    except Exception as exc:
+        print(f"  [infographic] Playwright render failed ({exc}), falling back to matplotlib...")
+        from renderer.render_matplotlib import render as render_mpl
+        return render_mpl(content, out_path)
 
 
 # ── LinkedIn upload (unchanged) ───────────────────────────────────────────────

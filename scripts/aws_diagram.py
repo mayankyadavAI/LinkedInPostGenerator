@@ -45,14 +45,15 @@ Agent types : {agent_types}
 Solution type: {solution_type}
 
 DIAGRAM REQUIREMENTS — read carefully:
-1. Include 5-7 clusters covering ALL of these layers (use only what applies):
+1. Include 4-7 clusters covering ONLY the layers this architecture genuinely needs.
+   Skip layers that don't apply — not every system needs an AI/agent layer or orchestration:
    - "Client / Entry" — users, external APIs, SDKs, web/mobile clients
-   - "Security & Network" — WAF, Cognito, IAM, VPC, API Gateway / ALB
-   - "Orchestration" — Step Functions, EventBridge, SQS/SNS, Lambda triggers
-   - "Agent Layer" — Bedrock Agents, LLM calls, tool-use, memory, RAG retrieval
-   - "Processing" — SageMaker, Lambda compute, ECS/Fargate workloads, Glue
-   - "Data & Storage" — S3, Aurora/RDS, DynamoDB, OpenSearch, ElastiCache
-   - "Observability" — CloudWatch, X-Ray, CloudTrail, Bedrock model metrics
+   - "Security & Network" — authentication, authorization, network boundaries, API entry points
+   - "Orchestration" — workflow coordination, event routing, message queues (include ONLY if the use case has multi-step workflows or event-driven coordination)
+   - "AI / ML Layer" — model inference, agent orchestration, NLP, document intelligence (include ONLY if the use case involves AI/ML — many don't)
+   - "Processing" — compute workloads, data transformation, batch/stream processing
+   - "Data & Storage" — databases, object storage, caches, search indexes, data warehouses
+   - "Observability" — monitoring, tracing, audit logging, alerting
 
 2. Target 12-18 nodes total. Every important AWS service in the use case must appear.
    Do NOT collapse the architecture — show each service as its own node.

@@ -105,7 +105,7 @@ else:
     TOPICS     = _slot["topics"]
     TONES      = _slot["tones"]
 
-INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") == "1"
+INCLUDE_INFOGRAPHIC = os.environ.get("DISABLE_INFOGRAPHIC", "0") != "1"
 _PNG_PATH = os.path.join(_script_dir, "..", "renderer", "output", "infographic.png")
 
 
@@ -342,23 +342,26 @@ def _shorten_if_needed(post: str, system_prompt: str) -> str:
 # ==============================================================================
 
 BIZ_POST_SYSTEM = """
-You are ghostwriting LinkedIn posts for a principal solutions architect and startup
-advisor who builds production AI systems and shares architecture decisions publicly.
+You are ghostwriting LinkedIn posts for a Principal Software Engineer in AI/ML and Multi-Agent Systems
+sharing technical deep-dives and lessons learned building production AI systems.
 
-Voice: solution-architect practitioner. You explain WHY each service was chosen over
-the alternative, what breaks at scale, and what the non-obvious design decision is.
-You've drawn this on a whiteboard for a VP of Engineering — write like that.
+Voice: principal engineering practitioner who leads with the REAL PROBLEM and the ARCHITECTURAL INSIGHT.
+You explain how multi-agent architectures, agentic RAG, state management, and inference pipelines
+actually work under the hood. You talk about what breaks under concurrency, latency budgets, state
+synchronization, tool schema validation, and the engineering tradeoffs between models and software systems.
+You've drawn this on a whiteboard for senior engineers and tech leads — write like that.
 
-When the post is based on a REAL company or YC idea, write in the style of an
-independent SA analysis — not as a spokesperson for that company. Use framing like
-"a startup in this space", "this class of system", or "a production deployment like
-this" rather than quoting the company as a client. You are the analyst, not their PR.
-
-Never claim real client results or measured ROI. Use "a system like this" framing
-with plausible, specific estimates. No hype. No corporate buzzwords.
+CRITICAL ANTI-PATTERNS — avoid these strictly:
+- Do NOT write posts that are just a list of cloud service names strung together. If removing the
+  service names leaves the post without technical substance, rewrite it completely.
+- Do NOT default to "Bedrock" or "Step Functions" unless genuinely central to the technical decision.
+- Lead with the concrete mechanism and insight (e.g., "The reason multi-agent loops fail in production
+  isn't model reasoning — it's state race conditions on tool returns").
+- Never claim ungrounded ROI or client results. Use "in production agent systems" framing.
+- No corporate buzzwords (synergize, holistic, seamless, revolutionary, game-changer).
 
 LENGTH: Hard limit — 1600 characters (~250 words). Every sentence must earn its place.
-The diagram does the visual heavy lifting; the post provides context and insight.
+The accompanying infographic does the visual heavy lifting; the post provides context and insight.
 
 Platform rules: plain text only. Use "→ " for bullets. No markdown. No emoji by default.
 """.strip()
@@ -380,22 +383,29 @@ Tone               : {tone}
 Source inspiration : {source_company_or_idea}
 
 Structure (short, crisp, SA-level):
-1. Opening hook (< 210 chars). Start with the architectural insight or a specific number.
-   Use the provided hook as inspiration. Never open with a question or command.
-   If source_company_or_idea is non-empty, you may reference "this category of system"
-   or "companies like [name]" to anchor the reader — but write as an independent analyst.
+1. Opening hook (< 210 chars). Start with the architectural insight, a specific number,
+   or the core problem. Use the provided hook as inspiration. Never open with a question
+   or command. If source_company_or_idea is non-empty, you may reference "this category
+   of system" or "companies like [name]" to anchor the reader — but write as an
+   independent analyst.
 2. The problem — 1-2 sentences. Name the workflow, the cost, why it breaks today.
-3. The architecture — 1 short paragraph. Name the specific AWS services and their roles.
-   Lead with the non-obvious design decision ({architecture_insight}).
-4. Two or three "→ " bullets: one on data flow, one on scale/reliability, one on
-   security or observability (only include if genuinely interesting for this use case).
+   This is the heart of the post. Make the reader feel the pain.
+3. The architecture — 1 short paragraph. Lead with the NON-OBVIOUS design decision
+   ({architecture_insight}). Mention only the 2-4 AWS services that are central to
+   that decision — do NOT list every service from the use case. Explain WHY each was
+   chosen, not just that it was used.
+4. Two or three "→ " bullets: pick from data flow, scale/reliability, cost,
+   security, or observability — whichever 2-3 are genuinely interesting for THIS
+   specific use case. Every bullet must contain a concrete detail.
 5. One closing line — what this pattern means for engineers building similar systems.
 6. 3-5 hashtags on their own line. Specific and searchable.
 
 Rules:
 - HARD LIMIT: under 1600 characters. Count carefully.
-- Name AWS services specifically. No generic "cloud infrastructure" phrases.
-- Agent types (if present): {agent_types} — name them in the architecture paragraph.
+- Do NOT write a laundry list of AWS services. The post should read as an architecture
+  insight, not a product catalog. If removing the service names makes the post empty,
+  the post is bad — rewrite it with substance.
+- Agent types (if present): {agent_types} — mention them if they add insight, skip if N/A.
 - No hype, no invented client results. Plausible estimates only, framed as such.
 - No closing question.
 
@@ -561,31 +571,40 @@ def build_nanobanana_diagram(use_case: dict) -> str | None:
     return build_nb_diagram(use_case, _PNG_PATH)
 
 
-def build_diagram(use_case: dict) -> str | None:
+def build_diagram(use_case: dict, post_text: str = "") -> str | None:
     """
-    Dispatch to the correct diagram engine based on DIAGRAM_ENGINE env var.
-
-      DIAGRAM_ENGINE=nanobanana  → Gemini image-gen (premium dark-mode visuals)
-      DIAGRAM_ENGINE=aws         → diagrams library + Graphviz (default)
-      DIAGRAM_ENGINE=off         → skip diagram entirely
-
-    Falls back to aws if the selected engine fails.
+    Generate professional Light-Mode technical infographic tailored to the specific post.
+    Gemini picks the optimal layout: flow | split | layers | cycle | breakdown.
+    Playwright renders crisp 3x retina PNG using our light-mode Swiss templates.
     """
-    engine = os.environ.get("DIAGRAM_ENGINE", "nanobanana").lower().strip()
-
-    if engine == "off":
+    if not INCLUDE_INFOGRAPHIC:
         return None
 
-    if engine == "nanobanana":
-        png = build_nanobanana_diagram(use_case)
-        if png:
-            return png
-        # Transparent fallback to the Graphviz renderer
-        print("  [nanobanana] Falling back to aws_diagram renderer...")
-        return build_aws_diagram(use_case)
+    engine = os.environ.get("DIAGRAM_ENGINE", "infographic").lower().strip()
+    if engine in ("off", "none") and not os.environ.get("ENABLE_INFOGRAPHIC"):
+        return None
 
-    # engine == "aws" or anything else
-    return build_aws_diagram(use_case)
+    print("[ Step 3 ] Generating dynamic light-mode technical infographic...")
+    try:
+        import sys as _sys, pathlib as _pl
+        _scripts = str(_pl.Path(__file__).parent)
+        if _scripts not in _sys.path:
+            _sys.path.insert(0, _scripts)
+        from infographic import generate_diagram_content, render_diagram
+
+        topic = use_case.get("title", "AI Systems Architecture")
+        content_text = post_text if post_text else use_case.get("solution_summary", "")
+        spec = generate_diagram_content(topic, content_text, generate_text)
+        png = render_diagram(spec, _PNG_PATH)
+        print(f"  [infographic] Successfully rendered ({spec.get('diagram_type')} layout) → {png}\n")
+        return png
+    except Exception as exc:
+        print(f"  [infographic] Light-mode render failed ({exc}). Checking fallback...")
+        if engine == "nanobanana":
+            return build_nanobanana_diagram(use_case)
+        elif engine == "aws":
+            return build_aws_diagram(use_case)
+        return None
 
 
 # ==============================================================================
@@ -919,8 +938,8 @@ def main(preview: bool = False) -> None:
             # Step 2.5: Humanize
             post = humanize_post(draft)
 
-            # Step 3: Architecture diagram (NanoBanana by default, aws as fallback)
-            png_path  = build_diagram(use_case)
+            # Step 3: Dynamic Technical Infographic (Light mode, adaptive layout)
+            png_path  = build_diagram(use_case, post)
             image_urn = upload_image_to_linkedin(png_path) if not preview else None
 
             if preview:

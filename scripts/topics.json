@@ -1,26 +1,26 @@
 {
-  "niche": "AI and machine learning, explained for beginners and curious learners",
+  "niche": "Production AI, Multi-Agent Systems, and Applied ML Engineering",
 
-  "persona": "A software engineer who studies AI every day and explains it in plain language. I break down confusing AI concepts into things anyone curious about technology can understand. I'm not a founder or a CEO — just someone who reads papers, runs experiments, and shares what I learn. My posts are honest, specific, and grounded in how things actually work — not hype.",
+  "persona": "Principal Engineer in AI/ML and Agentic Systems. I design and scale multi-agent architectures, LLMOps pipelines, and production inference systems. My posts break down the real engineering: failure modes, latency bottlenecks, state synchronization, orchestration patterns, and tradeoffs between models and systems.",
 
-  "business_usecase_persona": "A senior software engineer and solutions architect who has built production AI systems. I write about real business problems, the AWS infrastructure that solves them at scale, and the engineering tradeoffs that matter. I don't hype — I explain what the architecture actually does, why each service was chosen, and what breaks if you get it wrong.",
+  "business_usecase_persona": "Principal Software Engineer specializing in AI/ML and Multi-Agent Systems. I write about building autonomous agent architectures that actually survive production. I focus on concrete mechanisms: planner-executor-critic loops, memory management, tool routing, guardrails, and non-obvious engineering decisions that separate prototypes from production.",
 
   "content_slots": {
 
     "business_usecase": {
-      "label": "Production AI business use case with AWS architecture diagram",
-      "description": "Fully dynamic — Gemini invents a fresh use case each run. Covers multi-agent systems, YC-style AI-native startups, enterprise AI transformations, and AI infrastructure plays. A solution-architect-level AWS diagram is generated alongside every post.",
+      "label": "AI Systems Engineering & Multi-Agent Architecture Insights",
+      "description": "High-signal engineering deep-dives covering multi-agent orchestration, agentic RAG, state management, LLMOps, and production AI patterns, paired with auto-selected light-mode technical infographics.",
       "idea_categories": [
-        "Multi-agent AI systems — specialized LLM agents collaborating (research + reasoning + action, critic/debate patterns, hierarchical orchestration, tool-use pipelines)",
-        "YC-style AI-native startups — niche vertical problems a small team could own (AI for legal ops, medical coding, construction estimation, logistics dispatch, procurement)",
-        "Enterprise AI transformation — Fortune 500 workflows rebuilt with LLMs and ML pipelines (supply chain, risk, compliance, document ops, customer ops)",
-        "AI infrastructure and developer tooling — evaluation frameworks, guardrails, routing, memory systems, LLMOps platforms, agent observability"
+        "Multi-agent AI architectures — planner-executor-critic loops, hierarchical agent delegation, tool-use pipelines, debate/verification protocols",
+        "Agentic RAG & context engineering — hybrid search, access-control pre-filtering, cross-encoder reranking, context window management, KV-cache optimization",
+        "Production AI reliability & guardrails — deterministic fallbacks, PII masking, hallucination mitigation, rate-limiting, timeout budgets",
+        "LLMOps & inference engineering — speculative decoding, prompt caching, model routing, latency budgets, agent session state isolation"
       ],
       "tones": [
-        "Technical and specific — name the AWS services, agent types, data flows, and why each architectural decision was made over the obvious alternative.",
-        "Production-minded — what breaks at scale, what the latency budget is, what the failure mode looks like, how observability is wired.",
-        "Solution-architect voice — written by someone who would draw this on a whiteboard for a VP of Engineering, not a blog post summarizer.",
-        "Business-grounded — connect architecture choices to measurable outcomes. Specific plausible metrics, not vague value claims."
+        "Principal Engineer practitioner — deep, concrete, zero-fluff. Focus on failure modes, state corruption, latency budgets, and what broke in testing.",
+        "Architectural tradeoff analysis — comparing naive tutorial implementations with production reality (e.g. single prompt vs orchestrated state graph).",
+        "Systems-level AI insight — treating LLMs as non-deterministic compute nodes inside deterministic software systems.",
+        "Engineering lessons learned — why a straightforward approach failed at scale and the exact pattern that fixed it."
       ]
     },
 

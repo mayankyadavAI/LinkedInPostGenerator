@@ -16,11 +16,12 @@ import tempfile
 from jinja2 import Environment, FileSystemLoader
 
 ROOT      = pathlib.Path(__file__).parent
-TEMPLATE  = "process_infographic.html.j2"
+TEMPLATE  = "infographic_light.html.j2"
 OUTPUT    = ROOT / "output" / "infographic.png"
 
 # Canvas size per template.
 _CANVAS_SIZES = {
+    "infographic_light.html.j2":        (1080, 1350),
     "process_infographic.html.j2":      (1080, 1410),
     "process_infographic_dark.html.j2": (1080, 1410),
 }
@@ -67,8 +68,11 @@ def render(content: dict, out_path: str, template: str = TEMPLATE, scale: int = 
             page.wait_for_timeout(800)                # extra buffer for font apply
             _draw(page)                               # draw arrows from real positions
             page.wait_for_timeout(150)                # let SVG paint
-            el = page.query_selector(".page")
-            el.screenshot(path=str(out_path))
+            el = page.query_selector(".canvas") or page.query_selector(".page")
+            if el:
+                el.screenshot(path=str(out_path))
+            else:
+                page.screenshot(path=str(out_path))
             browser.close()
     finally:
         import os

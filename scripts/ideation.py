@@ -53,9 +53,27 @@ not the vehicle hardware or sensor network itself.
 
 You think like the engineer who would actually build this — naming the specific
 AWS services, the non-obvious architectural tradeoff, and what breaks at scale.
-Use Amazon Bedrock for LLM inference and agent orchestration unless a more specific
-AWS ML service (SageMaker, Comprehend, Textract, Rekognition) is clearly a better fit
-for the use case. Never include IoT Core, IoT Greengrass, or IoT Analytics.
+
+SERVICE SELECTION — choose services that genuinely fit the use case, not a fixed template:
+  LLM inference (only when the use case involves LLMs): Amazon Bedrock, SageMaker
+  endpoints, or self-hosted on ECS/EKS — pick whichever fits the latency, cost, and
+  customization needs.
+  Orchestration: Step Functions (complex multi-step workflows), EventBridge (event-driven),
+  SQS/SNS (decoupling), or direct Lambda invocation (simple pipelines). Many use cases
+  need NO dedicated orchestration service.
+  ML services: SageMaker (training/custom models), Comprehend (NLP), Textract (documents),
+  Rekognition (images/video), Forecast (time series), Personalize (recommendations),
+  FraudDetector (fraud) — use the purpose-built service when it directly solves the problem.
+  Data: Aurora/RDS (relational), DynamoDB (key-value/session), OpenSearch (search/vectors),
+  ElastiCache (caching), Redshift (analytics warehouse), Kinesis (streaming), Glue (ETL).
+  Compute: Lambda (event-driven/short tasks), ECS/Fargate (containers), EKS (Kubernetes),
+  Batch (large-scale batch jobs).
+  CRITICAL: Do NOT default to "Bedrock + Step Functions" for every use case. A data
+  analytics pipeline needs Kinesis + Glue + Redshift with zero LLM involvement. A simple
+  API backend needs Lambda + DynamoDB + API Gateway with no orchestration service. A
+  document processing system might use Textract + Comprehend, not Bedrock.
+
+Never include IoT Core, IoT Greengrass, or IoT Analytics.
 You never hype. You never invent client results.
 """.strip()
 
@@ -77,8 +95,12 @@ DOMAIN RULES (enforce strictly):
   pipeline, and the developer-facing platform — NOT the device firmware or sensor network.
 - Excluded AWS services: AWS IoT Core, AWS IoT Greengrass, AWS IoT Analytics,
   AWS Greengrass, Amazon Kinesis Video Streams for device streaming.
-- For LLM inference and agent orchestration: prefer Amazon Bedrock + Amazon Bedrock Agents.
-  Use Amazon SageMaker only when there is a clear model training or custom deployment need.
+- For LLM/ML: choose the AWS service that fits the actual workload. Not every use case
+  needs an LLM — data pipelines, analytics platforms, and CRUD workflows often don't.
+  Use purpose-built services (Textract, Comprehend, Rekognition, Forecast, FraudDetector)
+  when they directly solve the problem instead of defaulting to Bedrock.
+  Use SageMaker for custom model training/serving. Use Bedrock only when managed LLM
+  access is genuinely needed.
 
 Requirements:
 - Ground every architectural choice in the specific software problem this company solves
@@ -102,7 +124,7 @@ Output ONLY valid JSON. No markdown fences, no explanation:
   "business_impact": "1 sentence — plausible metric tied to this specific industry",
   "solution_type": "one of: multi_agent_orchestration | agentic_rag | real_time_ml | document_intelligence | fraud_detection | llm_evaluation | llmops_platform | predictive_analytics | data_platform",
   "aws_services": [
-    "8-12 specific AWS service names — include API Gateway or ALB, Lambda or ECS, Bedrock, S3, RDS or DynamoDB, OpenSearch Service or Kendra, CloudWatch, and at least one security service"
+    "8-12 specific AWS service names chosen for THIS use case. Include only services that serve a clear purpose in the architecture. Must include at least one compute (Lambda/ECS/Fargate), one storage (S3/RDS/DynamoDB), one entry point (API Gateway/ALB/CloudFront), one observability (CloudWatch/X-Ray), and one security service (WAF/Cognito/KMS/GuardDuty). Add ML, orchestration, streaming, or analytics services ONLY when the use case genuinely requires them — do NOT include Bedrock or Step Functions by default."
   ],
   "agent_types": ["list agent roles if multi-agent, else empty list"],
   "complexity": "high",
@@ -111,6 +133,10 @@ Output ONLY valid JSON. No markdown fences, no explanation:
 
 IMPORTANT: aws_services must use official AWS service names and must NOT include
 IoT Core, IoT Greengrass, IoT Analytics, or any IoT/device service.
+Do NOT default to Amazon Bedrock + Step Functions for every use case. Choose services
+that genuinely fit the problem — a data analytics pipeline needs Glue + Redshift, not
+Bedrock. A simple API backend needs Lambda + DynamoDB, not Step Functions. A document
+processing system may need Textract + Comprehend, not a general-purpose LLM.
 Include at least one security service (WAF, Cognito, KMS, or GuardDuty) and
 one observability service (CloudWatch, X-Ray, or CloudTrail).
 """.strip()
@@ -164,7 +190,7 @@ Output ONLY valid JSON. No markdown fences, no explanation:
   "business_impact": "1 sentence — plausible metric. Be specific: time saved, error rate reduced, cost cut.",
   "solution_type": "one of: multi_agent_orchestration | agentic_rag | real_time_ml | document_intelligence | fraud_detection | llm_evaluation | llmops_platform | predictive_analytics | data_platform",
   "aws_services": [
-    "8-12 specific AWS service names — include API Gateway or ALB, Lambda or ECS, Bedrock, S3, RDS or DynamoDB, OpenSearch Service or Kendra, CloudWatch, and at least one security service"
+    "8-12 specific AWS service names chosen for THIS use case. Include only services that serve a clear purpose in the architecture. Must include at least one compute (Lambda/ECS/Fargate), one storage (S3/RDS/DynamoDB), one entry point (API Gateway/ALB/CloudFront), one observability (CloudWatch/X-Ray), and one security service (WAF/Cognito/KMS/GuardDuty). Add ML, orchestration, streaming, or analytics services ONLY when the use case genuinely requires them — do NOT include Bedrock or Step Functions by default."
   ],
   "agent_types": ["list agent roles if multi-agent, else empty list"],
   "complexity": "high",
@@ -172,7 +198,8 @@ Output ONLY valid JSON. No markdown fences, no explanation:
 }}
 
 aws_services must use official AWS service names. Do NOT include IoT Core, IoT Greengrass,
-IoT Analytics, or any IoT/device service. Prefer Amazon Bedrock for LLM inference.
+IoT Analytics, or any IoT/device service. Do NOT default to Bedrock + Step Functions —
+choose services that fit the actual problem.
 Include at least one security service (WAF, Cognito, or KMS) and one observability
 service (CloudWatch, X-Ray, or CloudTrail).
 """.strip()
