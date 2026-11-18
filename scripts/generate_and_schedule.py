@@ -938,27 +938,20 @@ def main(preview: bool = False) -> None:
             # Step 2.5: Humanize
             post = humanize_post(draft)
 
-            # Step 3: Dynamic Technical Infographic (Light mode, adaptive layout)
-            png_path  = build_diagram(use_case, post)
-            image_urn = upload_image_to_linkedin(png_path) if not preview else None
-
             if preview:
                 print(f"{'='*60}")
                 print("  PREVIEW ONLY — post NOT published.")
-                if png_path:
-                    print(f"  Diagram preview: {png_path}")
                 print(f"{'='*60}\n")
                 return
 
             validate_post_length(post, PLATFORM)
-            post_id = post_to_linkedin(post, image_urn=image_urn)
+            post_id = post_to_linkedin(post)
 
             # First comment DISABLED
             # _post_engagement_comment_disabled(post_id, "")
 
             print(f"{'='*60}")
             print("  Done! Business use case post published.")
-            print(f"  Image attached : {'yes' if image_urn else 'no (text-only)'}")
             print(f"  LinkedIn ID    : {post_id}")
             print(f"{'='*60}\n")
 
