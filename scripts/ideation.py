@@ -35,110 +35,87 @@ _HERE = pathlib.Path(__file__).parent
 # ==============================================================================
 
 _GROUNDED_SYSTEM = """
-You are a principal AWS solutions architect reviewing a REAL AI SaaS startup idea,
-YC company, or trending AI product. Your job: produce a production-grade AWS
-implementation analysis for a LinkedIn post read by senior engineers and
-technical leaders.
+You are a principal AI systems engineer who writes production-grade technical
+content for senior engineers and technical leaders.
 
-DOMAIN CONSTRAINT — only cover software and SaaS products. Specifically:
-  ALLOWED: LLM applications, AI agents, developer tooling, data platforms, MLOps,
-  enterprise software automation, SaaS workflow tools, fintech, legal-tech,
-  healthcare software, e-commerce software, sales/marketing software,
-  productivity software, search and retrieval, content generation platforms.
-  EXCLUDED: IoT hardware, embedded systems, robotics, vehicle telematics,
-  drone/aviation, physical sensors, industrial control systems, smart home devices.
-If the input idea touches an excluded domain, pivot to the SOFTWARE layer of that
-idea — e.g. the cloud data pipeline and AI model serving behind a fleet system,
-not the vehicle hardware or sensor network itself.
+Your expertise: multi-agent architectures, LLMOps, knowledge graphs, ontology design,
+production inference systems, context engineering, and AI reliability patterns.
 
-You think like the engineer who would actually build this — naming the specific
-AWS services, the non-obvious architectural tradeoff, and what breaks at scale.
+You write like someone who has debugged agent loops at 2am, designed ontology layers
+for RAG systems, tuned speculative decoding for latency budgets, and built guardrail
+pipelines that catch hallucinations before they reach users.
 
-SERVICE SELECTION — choose services that genuinely fit the use case, not a fixed template:
-  LLM inference (only when the use case involves LLMs): Amazon Bedrock, SageMaker
-  endpoints, or self-hosted on ECS/EKS — pick whichever fits the latency, cost, and
-  customization needs.
-  Orchestration: Step Functions (complex multi-step workflows), EventBridge (event-driven),
-  SQS/SNS (decoupling), or direct Lambda invocation (simple pipelines). Many use cases
-  need NO dedicated orchestration service.
-  ML services: SageMaker (training/custom models), Comprehend (NLP), Textract (documents),
-  Rekognition (images/video), Forecast (time series), Personalize (recommendations),
-  FraudDetector (fraud) — use the purpose-built service when it directly solves the problem.
-  Data: Aurora/RDS (relational), DynamoDB (key-value/session), OpenSearch (search/vectors),
-  ElastiCache (caching), Redshift (analytics warehouse), Kinesis (streaming), Glue (ETL).
-  Compute: Lambda (event-driven/short tasks), ECS/Fargate (containers), EKS (Kubernetes),
-  Batch (large-scale batch jobs).
-  CRITICAL: Do NOT default to "Bedrock + Step Functions" for every use case. A data
-  analytics pipeline needs Kinesis + Glue + Redshift with zero LLM involvement. A simple
-  API backend needs Lambda + DynamoDB + API Gateway with no orchestration service. A
-  document processing system might use Textract + Comprehend, not Bedrock.
+CONTENT FOCUS — teach HOW things work mechanistically:
+  - AI Agent internals: planning loops, tool-use pipelines, state machines,
+    planner-executor-critic patterns, hierarchical delegation, failure modes
+  - Ontology & knowledge engineering: ontology-driven grounding, knowledge graphs
+    for LLM context, semantic layers, entity resolution, schema design
+  - Context engineering: chunking topology, hybrid retrieval, reranking, KV-cache
+    optimization, context window management
+  - Production reliability: hallucination mitigation, guardrails, circuit breakers,
+    timeout budgets, deterministic fallbacks, PII masking
+  - Inference engineering: speculative decoding, model routing, batching, quantization
+  - LLMOps: evaluation pipelines, regression testing, prompt versioning, drift detection
 
-Never include IoT Core, IoT Greengrass, or IoT Analytics.
-You never hype. You never invent client results.
+NOT a company case study writer. Use research as a signal to identify what deep
+technical concept is worth teaching — then teach it from first principles.
+Never hype. Never invent numbers.
 """.strip()
 
 _GROUNDED_PROMPT = """
-Analyze the REAL company/idea below and produce a production-grade AWS solution
-architecture that a senior engineer would be proud to put in front of a VP of Eng.
+Use the research below as a SIGNAL to identify a deep AI engineering concept worth
+teaching. Then produce the spec for a post that explains that concept mechanistically,
+at production depth — not a company profile.
 
-━━━ REAL IDEA / COMPANY ━━━
+━━━ RESEARCH SIGNAL ━━━
 {idea_source}
 
-━━━ RESEARCH CONTEXT ━━━
+━━━ SUPPORTING CONTEXT ━━━
 {research_context}
 
-DOMAIN RULES (enforce strictly):
-- Focus ONLY on the software, data, and AI layer — never design for hardware,
-  physical sensors, IoT devices, vehicle telematics, robotics, or embedded systems.
-- If the company has a hardware component, analyze only the cloud/SaaS backend:
-  the data ingestion API, the ML inference service, the storage layer, the analytics
-  pipeline, and the developer-facing platform — NOT the device firmware or sensor network.
-- Excluded AWS services: AWS IoT Core, AWS IoT Greengrass, AWS IoT Analytics,
-  AWS Greengrass, Amazon Kinesis Video Streams for device streaming.
-- For LLM/ML: choose the AWS service that fits the actual workload. Not every use case
-  needs an LLM — data pipelines, analytics platforms, and CRUD workflows often don't.
-  Use purpose-built services (Textract, Comprehend, Rekognition, Forecast, FraudDetector)
-  when they directly solve the problem instead of defaulting to Bedrock.
-  Use SageMaker for custom model training/serving. Use Bedrock only when managed LLM
-  access is genuinely needed.
+WHAT TO DO:
+- Extract the underlying AI engineering concept, pattern, or failure mode from the research.
+- Do NOT write about the source company or product — it is irrelevant to the reader.
+- DO write about the technical mechanism: how it works, what breaks, what the production
+  pattern is that fixes it.
+- Example: research mentions "agent memory degradation" → write about episodic vs
+  semantic vs working memory architectures, when each fails under load, and the
+  session-scoped isolation pattern that fixes context bleed.
 
-Requirements:
-- Ground every architectural choice in the specific software problem this company solves
-- Name the exact AWS services that map to their actual technical needs
-- Include the non-obvious SA decision that separates production from prototype
-- If it is a YC early-stage startup, keep the architecture cost-optimised and
-  serverless-first — avoid premature infra complexity
-- Business impact must reference the specific industry (plausible estimates, not invented ROI)
-- source_company_or_idea: the actual company/idea name (use "category-level" if unknown)
+CONCEPT CATEGORIES — pick the one the research most strongly signals:
+  agent_internals       — planning loops, tool-use, executor patterns, state machines,
+                          critic loops, hierarchical delegation, concurrent tool calls
+  ontology_knowledge    — ontology-driven LLM grounding, knowledge graphs, semantic layers,
+                          entity resolution, structured reasoning, schema design
+  context_engineering   — RAG architecture, chunking topology, reranking pipelines,
+                          KV-cache optimization, hybrid retrieval, context window mgmt
+  inference_engineering — speculative decoding, model routing, batching strategies,
+                          quantization tradeoffs, latency/throughput, prompt caching
+  production_reliability — hallucination mitigation, guardrail layers, circuit breakers,
+                           timeout budgets, deterministic fallbacks, PII masking
+  llmops                — evaluation pipelines, regression testing, prompt versioning,
+                          shadow deployments, drift detection, A/B model testing
 
 Output ONLY valid JSON. No markdown fences, no explanation:
 {{
-  "title": "5-10 word title — reads like a solution name, not a company name",
-  "category": "one of: multi_agent | yc_startup | enterprise_ai | ai_infra",
-  "industry": "specific software industry vertical (e.g. legal-tech, fintech, developer-tooling, enterprise-saas, healthcare-software, e-commerce, sales-automation)",
+  "title": "5-10 word title that reads like a deep-dive post, e.g. 'Why Agent Planning Loops Break Under Concurrent Tool Calls'",
+  "category": "one of: multi_agent | ai_infra | enterprise_ai | yc_startup",
+  "industry": "one of: ai-infrastructure | developer-tooling | enterprise-ai | llmops | knowledge-engineering",
   "company_type": "startup | enterprise | both",
-  "source_company_or_idea": "name or short description of the real idea this is based on",
-  "problem": "2-3 sentences — the specific concrete software/data pain. Name the workflow, the cost, the breakage.",
-  "solution_summary": "2-3 sentences — the AWS architecture. Name agent types, models, data flows.",
-  "architecture_insight": "1 sentence — the non-obvious SA decision that makes this production-grade vs prototype",
-  "business_impact": "1 sentence — plausible metric tied to this specific industry",
-  "solution_type": "one of: multi_agent_orchestration | agentic_rag | real_time_ml | document_intelligence | fraud_detection | llm_evaluation | llmops_platform | predictive_analytics | data_platform",
+  "source_company_or_idea": "",
+  "concept_category": "one of: agent_internals | ontology_knowledge | context_engineering | inference_engineering | production_reliability | llmops",
+  "problem": "2-3 sentences — the specific failure mode or engineering challenge. Name the exact mechanism: race condition in concurrent tool calls, context bleed between agent sessions, ontology mismatch causing hallucination, KV-cache invalidation under dynamic prompts.",
+  "solution_summary": "2-3 sentences — the production pattern. Name specific techniques: session-scoped memory isolation, ontology-grounded retrieval with entity linking, speculative decoding with draft model validation, two-phase reranking pipeline.",
+  "architecture_insight": "1 sentence — the non-obvious decision a tutorial would miss but a production incident would teach. Mechanistic and specific.",
+  "business_impact": "1 sentence — engineering outcome with a plausible number: latency cut, error rate reduction, reliability gain.",
+  "solution_type": "one of: multi_agent_orchestration | agentic_rag | real_time_ml | document_intelligence | llm_evaluation | llmops_platform | knowledge_graph | inference_optimization",
   "aws_services": [
-    "8-12 specific AWS service names chosen for THIS use case. Include only services that serve a clear purpose in the architecture. Must include at least one compute (Lambda/ECS/Fargate), one storage (S3/RDS/DynamoDB), one entry point (API Gateway/ALB/CloudFront), one observability (CloudWatch/X-Ray), and one security service (WAF/Cognito/KMS/GuardDuty). Add ML, orchestration, streaming, or analytics services ONLY when the use case genuinely requires them — do NOT include Bedrock or Step Functions by default."
+    "6-10 AWS services relevant to implementing this pattern. Only include services with a clear role. Must include compute, storage, and observability. Add ML/LLM services only if the concept directly involves them."
   ],
-  "agent_types": ["list agent roles if multi-agent, else empty list"],
+  "agent_types": ["specific agent role names if concept involves multi-agent patterns, else empty list"],
   "complexity": "high",
-  "linkedin_hook": "one sentence — specific architectural observation or metric that stops a senior software engineer scrolling. Must reference the real use case."
+  "linkedin_hook": "1 sentence that stops a senior engineer scrolling — mechanistic, specific, surprising. Not a question. Not a generic claim."
 }}
-
-IMPORTANT: aws_services must use official AWS service names and must NOT include
-IoT Core, IoT Greengrass, IoT Analytics, or any IoT/device service.
-Do NOT default to Amazon Bedrock + Step Functions for every use case. Choose services
-that genuinely fit the problem — a data analytics pipeline needs Glue + Redshift, not
-Bedrock. A simple API backend needs Lambda + DynamoDB, not Step Functions. A document
-processing system may need Textract + Comprehend, not a general-purpose LLM.
-Include at least one security service (WAF, Cognito, KMS, or GuardDuty) and
-one observability service (CloudWatch, X-Ray, or CloudTrail).
 """.strip()
 
 
@@ -252,16 +229,20 @@ _DEFAULT_CATEGORY = "multi_agent"
 # ==============================================================================
 
 # Rotate queries so each daily run fetches a different angle.
-# All queries are scoped to software/SaaS — never IoT, robotics, or hardware.
+# Focused on deep AI engineering — agent internals, ontology, production patterns.
 _EXA_QUERIES = [
-    "YC W25 S25 AI SaaS startup software product launch 2025",
-    "AI SaaS startup raised seed funding enterprise software workflow automation 2025 2026",
-    "new vertical AI SaaS tool for lawyers doctors accountants engineers launched 2025",
-    "AI agent platform automate knowledge worker white collar workflow software 2025",
-    "YC backed AI startup replace human specialist software SaaS seed round 2026",
-    "AI developer tooling LLMOps evaluation guardrails agent infrastructure SaaS 2025",
-    "enterprise AI automation Fortune 500 software LLM deployment production 2025",
-    "generative AI fintech legal-tech healthcare software startup product launch 2025",
+    "AI agent planning loop memory tool-use production architecture engineering 2025",
+    "knowledge graph ontology LLM grounding enterprise AI production system 2025",
+    "multi-agent orchestration planner executor critic LLM system design 2025",
+    "LLM context engineering prompt caching speculative decoding inference optimization 2025",
+    "agentic RAG hybrid search reranking knowledge retrieval production system 2025",
+    "AI agent state machine workflow orchestration LangGraph LangChain production 2025",
+    "LLMOps evaluation guardrails hallucination detection production AI reliability 2025",
+    "ontology-driven AI reasoning knowledge representation semantic layer production 2025",
+    "AI agent memory episodic semantic working memory production architecture 2025",
+    "tool-augmented LLM agent function calling structured output production patterns 2025",
+    "AI agent failure modes debugging production multi-agent system engineering 2025",
+    "vector database semantic search embedding pipeline production AI engineering 2025",
 ]
 
 _EXA_TIMEOUT = 20  # seconds
