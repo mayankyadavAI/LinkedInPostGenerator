@@ -982,7 +982,8 @@ def main(preview: bool = False) -> None:
                 topic, tone, NICHE, PERSONA, research
             )
             post     = humanize_post(draft)
-            png_path = build_manim_infographic(manim_code)
+            # Diagram generation disabled for now — text-only posts.
+            png_path = None  # build_manim_infographic(manim_code)
 
             if preview:
                 print(f"  Would comment: {first_comment}\n")
@@ -994,7 +995,8 @@ def main(preview: bool = False) -> None:
                 return
 
             validate_post_length(post, PLATFORM)
-            image_urn = upload_image_to_linkedin(png_path)
+            # Diagram generation disabled for now — text-only posts.
+            image_urn = None  # upload_image_to_linkedin(png_path)
             post_id   = post_to_linkedin(post, image_urn=image_urn)
 
             # First comment DISABLED

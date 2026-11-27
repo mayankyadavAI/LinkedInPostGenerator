@@ -50,11 +50,12 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          # Graphviz is required by the diagrams library for AWS architecture rendering
-          sudo apt-get install -y graphviz graphviz-dev
+          # Diagram generation disabled for now — no Graphviz/Cairo/Pango needed.
+          # sudo apt-get install -y graphviz graphviz-dev
           # Cairo/Pango retained for Matplotlib/Manim fallback
-          sudo apt-get install -y build-essential python3-dev pkg-config \
-            libcairo2-dev libpango1.0-dev
+          # sudo apt-get install -y build-essential python3-dev pkg-config \
+          #   libcairo2-dev libpango1.0-dev
+          echo "Diagram system dependencies skipped (text-only mode)."
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
@@ -114,15 +115,16 @@ jobs:
           LINKEDIN_PERSON_ID:     ${{ secrets.LINKEDIN_PERSON_ID }}
           CONTENT_SLOT:           ${{ steps.slot.outputs.slot }}
           IDEA_CATEGORY:          ${{ steps.slot.outputs.idea_category }}
-          INCLUDE_INFOGRAPHIC:    "1"
+          INCLUDE_INFOGRAPHIC:    "0"
           DIAGRAM_ENGINE:         "off"
           TOPIC_OVERRIDE:         ${{ github.event.inputs.topic }}
 
-      - name: Upload generated diagram
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nanobanana-diagram-${{ github.run_id }}
-          path: renderer/output/*.png
-          if-no-files-found: ignore
-          retention-days: 14
+      # Diagram generation disabled for now — text-only posts.
+      # - name: Upload generated diagram
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: nanobanana-diagram-${{ github.run_id }}
+      #     path: renderer/output/*.png
+      #     if-no-files-found: ignore
+      #     retention-days: 14
